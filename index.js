@@ -9,12 +9,12 @@ import {
 
 // Configuración de Firebase (debes reemplazar con tu configuración)
 const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "tu-proyecto.firebaseapp.com",
-    projectId: "tu-proyecto",
-    storageBucket: "tu-proyecto.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "TU_APP_ID"
+    apiKey: "AIzaSyDyvK3PJK5gwZBTD3R8vQl-TPK7jo66ET4",
+    authDomain: "domka-erp.firebaseapp.com",
+    projectId: "domka-erp",
+    storageBucket: "domka-erp.firebasestorage.app",
+    messagingSenderId: "610583027018",
+    appId: "1:610583027018:web:46f6f25e532bec491e35b3"
 };
 
 // Inicializar Firebase
