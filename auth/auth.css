@@ -1,0 +1,207 @@
+/* Variables CSS para mantener consistencia */
+:root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary-color: #64748b;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --background-color: #f8fafc;
+    --card-background: #ffffff;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Contenedor principal */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Encabezado */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+
+/* Contenedor principal de autenticación */
+.auth-main {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Pantallas de autenticación */
+.auth-screen {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.auth-screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Formularios */
+.auth-form {
+    background-color: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+}
+
+.auth-form h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--text-color);
+}
+
+.auth-form p {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--secondary-color);
+}
+
+/* Grupos de formulario */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Botones */
+.btn-primary {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Enlaces de autenticación */
+.auth-links {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-links a {
+    color: var(--primary-color);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s;
+}
+
+.auth-links a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+/* Pie de página */
+.auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+/* Mensajes de estado */
+.auth-message {
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    text-align: center;
+    display: none;
+}
+
+.auth-message.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.auth-message.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 10px;
+    }
+    
+    .auth-form {
+        padding: 1.5rem;
+    }
+    
+    .auth-header h1 {
+        font-size: 2rem;
+    }
+}
