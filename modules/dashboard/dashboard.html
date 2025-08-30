@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOMKA ERP - Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="../shared/styles.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar importado -->
+        <div id="sidebar-container"></div>
+
+        <div class="main-content">
+            <!-- Header importado -->
+            <div id="header-container"></div>
+
+            <div class="dashboard-content">
+                <h1>Dashboard</h1>
+                <div class="metrics-grid">
+                    <!-- Tarjeta de Total de Clientes -->
+                    <div class="metric-card">
+                        <div class="metric-icon client-icon">
+                            <i>👥</i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Clientes</h3>
+                            <span class="metric-value" id="total-clients">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Total de Cotizaciones -->
+                    <div class="metric-card">
+                        <div class="metric-icon quote-icon">
+                            <i>📋</i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Cotizaciones</h3>
+                            <span class="metric-value" id="total-quotes">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Total de Cuentas -->
+                    <div class="metric-card">
+                        <div class="metric-icon account-icon">
+                            <i>💰</i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Cuentas de Cobro</h3>
+                            <span class="metric-value" id="total-accounts">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta de Estado de Inventario -->
+                    <div class="metric-card">
+                        <div class="metric-icon inventory-icon">
+                            <i>📦</i>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Estado de Inventario</h3>
+                            <span class="metric-value" id="inventory-status">0 productos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-actions">
+                    <button class="btn-primary" id="new-quote-btn">
+                        <i>➕</i> Nueva Cotización
+                    </button>
+                </div>
+
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h2>Ingresos del Último Mes</h2>
+                        <canvas id="revenue-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importar Firebase y módulos -->
+    <script type="module" src="dashboard.js"></script>
+    <!-- Cargar componentes compartidos -->
+    <script>
+        // Cargar sidebar
+        fetch('../shared/sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('sidebar-container').innerHTML = data;
+            });
+
+        // Cargar header
+        fetch('../shared/header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOMKA ERP - Autenticación</title>
+    <link rel="stylesheet" href="auth.css">
+    <!-- Importación de Firebase -->
+    <script type="module" src="auth.js"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <header class="auth-header">
+            <h1>DOMKA ERP</h1>
+            <p>Sistema de gestión empresarial integral</p>
+        </header>
+
+        <div class="forms-container">
+            <!-- Formulario de Inicio de Sesión -->
+            <div class="form-wrapper active" id="login-form">
+                <h2>Iniciar Sesión</h2>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label for="loginEmail">Correo electrónico</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword">Contraseña</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Ingresar</button>
+                </form>
+                <p class="form-switch">¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a></p>
+            </div>
+
+            <!-- Formulario de Registro -->
+            <div class="form-wrapper" id="register-form">
+                <h2>Crear Cuenta</h2>
+                <form id="registerForm">
+                    <div class="input-group">
+                        <label for="registerName">Nombre completo</label>
+                        <input type="text" id="registerName" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="registerEmail">Correo electrónico</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="registerPassword">Contraseña</label>
+                        <input type="password" id="registerPassword" required minlength="6">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Selecciona una opción:</label>
+                        <div class="radio-group">
+                            <input type="radio" id="newCompany" name="companyOption" value="new" checked>
+                            <label for="newCompany">Crear nueva empresa</label>
+                        </div>
+                        <div class="radio-group">
+                            <input type="radio" id="existingCompany" name="companyOption" value="existing">
+                            <label for="existingCompany">Unirse a empresa existente</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group" id="newCompanyGroup">
+                        <label for="companyName">Nombre de la empresa</label>
+                        <input type="text" id="companyName">
+                    </div>
+                    
+                    <div class="input-group hidden" id="existingCompanyGroup">
+                        <label for="companyCode">Código de empresa</label>
+                        <input type="text" id="companyCode">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Registrarse</button>
+                </form>
+                <p class="form-switch">¿Ya tienes cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+
+        <div class="auth-alert hidden" id="authAlert">
+            <span id="alertMessage"></span>
+            <button id="closeAlert">&times;</button>
+        </div>
+    </div>
+</body>
+</html>

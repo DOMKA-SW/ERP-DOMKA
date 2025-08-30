@@ -1,0 +1,221 @@
+/* auth.css - Estilos para el módulo de autenticación */
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --warning-color: #f8961e;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --gray-color: #6c757d;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.auth-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 100%;
+    max-width: 450px;
+    overflow: hidden;
+}
+
+.auth-header {
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 25px;
+    text-align: center;
+}
+
+.auth-header h1 {
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.auth-header p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.forms-container {
+    padding: 25px;
+}
+
+.form-wrapper {
+    display: none;
+}
+
+.form-wrapper.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-wrapper h2 {
+    color: var(--dark-color);
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+.radio-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.radio-group input[type="radio"] {
+    width: auto;
+    margin-right: 10px;
+}
+
+.radio-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+}
+
+.form-switch {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--gray-color);
+}
+
+.form-switch a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-switch a:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none;
+}
+
+.auth-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    background-color: white;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 350px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+}
+
+.auth-alert.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.auth-alert.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.auth-alert.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+#alertMessage {
+    flex: 1;
+    margin-right: 15px;
+}
+
+#closeAlert {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--gray-color);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .auth-container {
+        max-width: 100%;
+    }
+    
+    .forms-container {
+        padding: 20px;
+    }
+    
+    .auth-header {
+        padding: 20px;
+    }
+}
