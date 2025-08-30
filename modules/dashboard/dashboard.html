@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DOMKA ERP - Dashboard</title>
     <link rel="stylesheet" href="dashboard.css">
-    <link rel="stylesheet" href="../../../shared/styles.css">
+    <link rel="stylesheet" href="../../../shared/components/styles.css">
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -87,14 +87,14 @@
     <!-- Cargar componentes compartidos -->
     <script>
         // Cargar sidebar
-        fetch('../../../shared/sidebar.html')
+        fetch('../../../shared/components/sidebar.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('sidebar-container').innerHTML = data;
             });
 
         // Cargar header
-        fetch('../../../shared/header.html')
+        fetch('../../../shared/components/header.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
@@ -103,5 +103,6 @@
 </body>
 
 </html>
+
 
 
