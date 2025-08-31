@@ -1,4 +1,9 @@
-/* === Reset básico === */
+/* =========================================================
+   DOMKA ERP - Hoja de estilos global
+   Colores principales: Naranja (#f97316), Negro (#111), Blanco (#fff)
+   ========================================================= */
+
+/* === RESET & BASE === */
 * {
   margin: 0;
   padding: 0;
@@ -6,110 +11,392 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f6fa;
-  color: #111111;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  line-height: 1.6;
 }
 
-/* === Layout general === */
-.dashboard-layout {
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+/* === VARIABLES DE COLOR === */
+:root {
+  --color-orange: #f97316;
+  --color-orange-dark: #c75d0d;
+  --color-black: #111;
+  --color-gray-light: #f5f6fa;
+  --color-white: #fff;
+}
+
+/* =========================================================
+   HEADER (usado en landing y dashboard)
+   ========================================================= */
+.main-header {
+  background: var(--color-black);
+  color: var(--color-white);
+  padding: 1rem 0;
+}
+
+.main-header .container {
   display: flex;
-  height: 100vh;
-  margin: 0;
+  align-items: center;
+  justify-content: space-between;
 }
 
-/* === Sidebar === */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: var(--color-orange);
+}
+
+.logo img {
+  height: 40px;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.main-nav a {
+  color: var(--color-white);
+  font-weight: 500;
+}
+
+.main-nav a:hover {
+  color: var(--color-orange);
+}
+
+.main-nav button {
+  background: var(--color-orange);
+  color: var(--color-white);
+  padding: 0.5rem 1rem;
+}
+
+.main-nav button:hover {
+  background: var(--color-orange-dark);
+}
+
+/* =========================================================
+   HERO (Landing - index.html)
+   ========================================================= */
+.hero {
+  background: linear-gradient(to right, var(--color-orange), #ff8f38);
+  color: var(--color-white);
+  padding: 4rem 0;
+}
+
+.hero .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.hero-content {
+  flex: 1 1 500px;
+  padding: 1rem;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.hero-buttons button {
+  padding: 0.8rem 1.5rem;
+}
+
+.hero-buttons button:first-child {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.hero-buttons .btn-secondary {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+.hero-buttons button:hover {
+  opacity: 0.85;
+}
+
+.hero-image {
+  flex: 1 1 400px;
+  text-align: center;
+}
+
+.hero-image img {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* =========================================================
+   FEATURES (Landing - index.html)
+   ========================================================= */
+.features {
+  padding: 4rem 0;
+  background: var(--color-white);
+}
+
+.features h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  background: var(--color-gray-light);
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  margin-bottom: 1rem;
+  color: var(--color-orange);
+  font-size: 2.5rem;
+}
+
+/* =========================================================
+   CTA (Landing - index.html)
+   ========================================================= */
+.cta {
+  background: var(--color-black);
+  color: var(--color-white);
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.cta button {
+  background: var(--color-orange);
+  color: var(--color-white);
+  padding: 0.8rem 2rem;
+}
+
+.cta button:hover {
+  background: var(--color-orange-dark);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+.main-footer {
+  background: var(--color-black);
+  color: var(--color-white);
+  padding: 2rem 1rem;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-orange);
+  font-weight: bold;
+}
+
+.footer-logo img {
+  height: 30px;
+}
+
+.footer-links a {
+  color: var(--color-white);
+  margin: 0 0.5rem;
+}
+
+.footer-links a:hover {
+  color: var(--color-orange);
+}
+
+.footer-copyright {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* =========================================================
+   FORMULARIOS (Login, Registro, etc.)
+   ========================================================= */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: var(--color-gray-light);
+}
+
+.auth-card {
+  background: var(--color-white);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card h2 {
+  margin-bottom: 1rem;
+  color: var(--color-black);
+  text-align: center;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-card input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.auth-card input:focus {
+  outline: none;
+  border-color: var(--color-orange);
+}
+
+.auth-card button {
+  background: var(--color-orange);
+  color: var(--color-white);
+  padding: 0.75rem;
+}
+
+.auth-card button:hover {
+  background: var(--color-orange-dark);
+}
+
+/* =========================================================
+   DASHBOARD (estructura ERP)
+   ========================================================= */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
 .sidebar {
-  width: 240px;
-  background: #111111; /* Negro */
-  color: #fff;
+  width: 250px;
+  background: var(--color-black);
+  color: var(--color-white);
   display: flex;
   flex-direction: column;
   padding: 1rem;
 }
 
 .sidebar .logo {
-  font-size: 1.4rem;
-  font-weight: bold;
   margin-bottom: 2rem;
-  text-align: center;
-  color: #f97316; /* Naranja */
 }
 
-.sidebar nav ul {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar nav ul li {
-  margin: 1rem 0;
-}
-
-.sidebar nav ul li a {
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 1rem;
-  padding: 0.5rem;
+.sidebar nav a {
   display: block;
+  padding: 0.8rem 1rem;
   border-radius: 6px;
-  transition: background 0.2s ease;
+  margin-bottom: 0.5rem;
 }
 
-.sidebar nav ul li a:hover {
-  background: #f97316; /* Hover naranja */
-  color: #fff;
+.sidebar nav a:hover {
+  background: var(--color-orange);
+  color: var(--color-white);
 }
 
-/* === Main content === */
+/* Main content */
 .main-content {
   flex: 1;
-  background: #f5f6fa;
-  display: flex;
-  flex-direction: column;
-}
-
-/* === Topbar === */
-.topbar {
-  background: #ffffff;
-  padding: 0.8rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid #f97316; /* Línea naranja */
-}
-
-.topbar p {
-  font-size: 0.9rem;
-  color: #111111;
-}
-
-/* Botón logout */
-#logoutBtn {
-  background: #f97316;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.2s ease;
-}
-
-#logoutBtn:hover {
-  background: #c75d0d; /* Naranja más oscuro */
-}
-
-/* === Content area === */
-.content {
-  flex: 1;
+  background: var(--color-gray-light);
   padding: 2rem;
 }
 
-.content h1 {
-  color: #111111;
+.topbar {
+  background: var(--color-white);
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Cards y módulos */
+.card {
+  background: var(--color-white);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.card h3 {
   margin-bottom: 1rem;
 }
 
-.content p {
-  color: #333333;
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+  .main-header .container {
+    flex-direction: column;
+  }
+
+  .hero .container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .sidebar {
+    width: 200px;
+  }
 }
