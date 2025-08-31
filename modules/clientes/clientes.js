@@ -443,3 +443,102 @@ window.clientModule = {
     deleteClient,
     logoutUser
 };
+
+import { 
+    getClientsByCompany, 
+    createDocument, 
+    updateDocument,
+    deleteDocument 
+} from '../../services/database.js';
+import { checkResourceAccess, validateOwnership } from '../../services/security.js';
+import { showNotification } from '../../services/helpers.js';
+
+let currentUser = null;
+let currentCompanyId = null;
+
+async function init() {
+    // Verificar permisos
+    const hasAccess = await checkModulePermission('clientes');
+    if (!hasAccess) {
+        window.location.href = '/modules/dashboard/index.html';
+        return;
+    }
+    
+    // Cargar datos del usuario
+    await loadUserData();
+    
+    // Cargar clientes de la empresa
+    await loadClients();
+    
+    setupEventListeners();
+}
+
+async function loadUserData() {
+    try {
+        const user = auth.currentUser;
+        const userData = await getUserData(user.uid);
+        
+        currentUser = userData;
+        currentCompanyId = userData.companyId;
+        
+        // Actualizar UI
+        document.getElementById('page-title').textContent = `Clientes - ${userData.company?.name || 'Mi Empresa'}`;
+        
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        showNotification('Error al cargar datos del usuario', 'error');
+    }
+}
+
+async function loadClients() {
+    try {
+        let clients;
+        
+        if (currentUser.role === 'superadmin') {
+            // Superadmin ve todos los clientes
+            clients = await getAllClients();
+        } else {
+            // Usuarios normales ven solo los clientes de su empresa
+            clients = await getClientsByCompany(currentCompanyId);
+        }
+        
+        displayClients(clients);
+        
+    } catch (error) {
+        console.error('Error loading clients:', error);
+        showNotification('Error al cargar los clientes', 'error');
+    }
+}
+
+async function handleCreateClient(clientData) {
+    try {
+        // Crear cliente con companyId automáticamente
+        await createDocument('clients', clientData, currentUser);
+        showNotification('Cliente creado exitosamente', 'success');
+        await loadClients(); // Recargar lista
+        
+    } catch (error) {
+        console.error('Error creating client:', error);
+        showNotification('Error al crear el cliente', 'error');
+    }
+}
+
+async function handleDeleteClient(clientId) {
+    try {
+        // Verificar que el usuario puede eliminar este cliente
+        const canDelete = await validateOwnership(clientId, 'clients');
+        
+        if (!canDelete) {
+            showNotification('No tienes permisos para eliminar este cliente', 'error');
+            return;
+        }
+        
+        await deleteDocument('clients', clientId);
+        showNotification('Cliente eliminado exitosamente', 'success');
+        await loadClients(); // Recargar lista
+        
+    } catch (error) {
+        console.error('Error deleting client:', error);
+        showNotification('Error al eliminar el cliente', 'error');
+    }
+}
