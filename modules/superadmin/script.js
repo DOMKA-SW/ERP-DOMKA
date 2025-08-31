@@ -3,7 +3,7 @@ import {
     auth, 
     signOut, 
     onAuthStateChanged 
-} from '../../services/firebase-config.js';
+} from '../../services/auth.js'; // Cambiado a auth.js
 import { 
     getUserData,
     getAllCompanies,
