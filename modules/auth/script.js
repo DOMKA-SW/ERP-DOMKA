@@ -83,7 +83,8 @@ function checkAuthState() {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // Usuario autenticado, redirigir según rol
-            redirectBasedOnRole(user.uid);
+            import { redirectUserBasedOnRole } from '../../services/database.js';
+            redirectUserBasedOnRole(user.uid);
         }
     });
 }
@@ -111,7 +112,7 @@ async function handleLogin(e) {
         const user = userCredential.user;
         
         // Redirigir según el rol del usuario
-        redirectBasedOnRole(user.uid);
+        redirectUserBasedOnRole(user.uid);
         
     } catch (error) {
         console.error('Error al iniciar sesión:', error);
@@ -294,3 +295,4 @@ function togglePasswordVisibility(inputId, button) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
