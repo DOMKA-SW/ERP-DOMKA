@@ -1,4 +1,3 @@
-// js/dashboard.js
 import { auth, db } from "./firebase.js";
 import { logoutUser, protectRoute } from "./auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -21,4 +20,28 @@ auth.onAuthStateChanged(async (user) => {
 // === Logout ===
 document.getElementById("logout-btn").addEventListener("click", async () => {
   await logoutUser();
+});
+
+// === Cargar módulos dinámicamente ===
+const moduleContainer = document.getElementById("module-container");
+const navLinks = document.querySelectorAll(".sidebar-nav a");
+
+navLinks.forEach(link => {
+  link.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const moduleName = link.getAttribute("data-module");
+    navLinks.forEach(l => l.classList.remove("active"));
+    link.classList.add("active");
+
+    try {
+      const res = await fetch(`modules/${moduleName}.html`);
+      const html = await res.text();
+      moduleContainer.innerHTML = html;
+      if (moduleName === "clientes") {
+        import("./modules/clientes.js").then(mod => mod.initClientes());
+      }
+    } catch (err) {
+      moduleContainer.innerHTML = `<p>Error al cargar módulo ${moduleName}</p>`;
+    }
+  });
 });
