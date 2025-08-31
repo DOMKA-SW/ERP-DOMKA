@@ -123,7 +123,7 @@ function checkAuthState() {
             await loadDashboardData();
         } else {
             // Usuario no autenticado, redirigir al login
-            window.location.href = '/modules/auth/';
+            window.location.href = '../../modules/auth/index.html';
         }
     });
 }
@@ -471,11 +471,12 @@ async function toggleTaskCompletion(e) {
     }
 }
 
-// Manejar cierre de sesión
+// Manejar cierre de sesión - Versión corregida
 async function handleLogout() {
     try {
         await signOut(auth);
-        window.location.href = '/modules/auth/';
+        // Redirigir a la página de auth index.html
+        window.location.href = '../../modules/auth/index.html';
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
         showNotification('Error al cerrar sesión', 'error');
@@ -518,4 +519,5 @@ function loadNavigation() {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
 
