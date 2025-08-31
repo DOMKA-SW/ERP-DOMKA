@@ -3,40 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | DOMKA ERP</title>
+  <title>Dashboard - DOMKA ERP</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/dashboard.js"></script>
 </head>
-<body>
+<body class="dashboard-page">
   <div class="dashboard-layout">
     
-    <!-- SIDEBAR -->
+    <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo">DOMKA ERP</div>
-      <nav>
-        <ul>
-          <li><a href="#">📊 Inicio</a></li>
-          <li><a href="#">💼 Facturación</a></li>
-          <li><a href="#">📦 Inventario</a></li>
-          <li><a href="#">👥 Clientes</a></li>
-          <li><a href="#">⚙️ Configuración</a></li>
-        </ul>
+      <div class="sidebar-header">
+        <img src="assets/logo.png" alt="DOMKA Logo">
+        <h2>DOMKA ERP</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active">🏠 Inicio</a>
+        <a href="#">👥 Clientes</a>
+        <a href="#">📋 Cotizaciones</a>
+        <a href="#">📦 Inventario</a>
+        <a href="#">📒 Contabilidad</a>
+        <a href="#">⚙️ Configuración</a>
       </nav>
+      <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
     </aside>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- Main content -->
     <main class="main-content">
+      <!-- Topbar -->
       <header class="topbar">
-        <p id="userInfo"></p>
-        <button id="logoutBtn">Cerrar sesión</button>
+        <h1 id="welcome-text">Bienvenido</h1>
       </header>
 
+      <!-- Dashboard content -->
       <section class="content">
-        <h1>Bienvenido al Panel</h1>
-        <p>Selecciona un módulo del menú lateral para comenzar.</p>
+        <h2>Panel Principal</h2>
+        <p>Aquí verás los módulos de tu empresa <span id="company-name">...</span>.</p>
+        <div class="widgets-grid">
+          <div class="widget-card">📊 Resumen de ventas</div>
+          <div class="widget-card">🛒 Órdenes recientes</div>
+          <div class="widget-card">⚠️ Alertas de inventario</div>
+        </div>
       </section>
     </main>
   </div>
-
-  <script type="module" src="js/auth.js"></script>
 </body>
 </html>
