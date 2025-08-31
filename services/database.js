@@ -246,3 +246,162 @@ export async function createTask(taskData) {
         throw e;
     }
 }
+
+// ... (código anterior)
+
+// Obtener todas las empresas
+export async function getAllCompanies() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "companies"));
+        const companies = [];
+        
+        querySnapshot.forEach((doc) => {
+            companies.push({ id: doc.id, ...doc.data() });
+        });
+        
+        return companies;
+    } catch (e) {
+        console.error("Error getting companies: ", e);
+        throw e;
+    }
+}
+
+// Obtener todos los usuarios
+export async function getAllUsers() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const users = [];
+        
+        querySnapshot.forEach((doc) => {
+            users.push({ id: doc.id, ...doc.data() });
+        });
+        
+        return users;
+    } catch (e) {
+        console.error("Error getting users: ", e);
+        throw e;
+    }
+}
+
+// Obtener métricas del sistema
+export async function getSystemMetrics() {
+    try {
+        // En una implementación real, esto calcularía métricas de Firestore
+        return {
+            userActivity: {
+                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                values: [120, 190, 210, 180, 250, 200, 170]
+            },
+            plansDistribution: {
+                labels: ['Gratuito', 'Básico', 'Profesional', 'Empresarial'],
+                values: [45, 25, 20, 10]
+            },
+            dailyRegistrations: {
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                values: [15, 22, 18, 25]
+            }
+        };
+    } catch (e) {
+        console.error("Error getting system metrics: ", e);
+        throw e;
+    }
+}
+
+// Obtener actividad del sistema
+export async function getSystemActivity() {
+    try {
+        // En una implementación real, esto vendría de Firestore
+        return [
+            {
+                id: '1',
+                type: 'user',
+                description: 'Nuevo usuario registrado: Juan Pérez',
+                timestamp: new Date()
+            },
+            {
+                id: '2',
+                type: 'company',
+                description: 'Nueva empresa creada: Constructora Andina S.A.',
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
+            },
+            {
+                id: '3',
+                type: 'system',
+                description: 'Respaldo del sistema completado',
+                timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
+            }
+        ];
+    } catch (e) {
+        console.error("Error getting system activity: ", e);
+        throw e;
+    }
+}
+
+// Crear empresa
+export async function createCompany(companyData) {
+    try {
+        const docRef = await addDoc(collection(db, "companies"), {
+            ...companyData,
+            createdAt: new Date(),
+            userCount: 0
+        });
+        
+        console.log("Company created with ID: ", docRef.id);
+        return docRef.id;
+    } catch (e) {
+        console.error("Error adding company: ", e);
+        throw e;
+    }
+}
+
+// Actualizar empresa
+export async function updateCompany(companyId, companyData) {
+    try {
+        const docRef = doc(db, "companies", companyId);
+        await updateDoc(docRef, companyData);
+        
+        console.log("Company updated: ", companyId);
+    } catch (e) {
+        console.error("Error updating company: ", e);
+        throw e;
+    }
+}
+
+// Actualizar usuario
+export async function updateUser(userId, userData) {
+    try {
+        const docRef = doc(db, "users", userId);
+        await updateDoc(docRef, userData);
+        
+        console.log("User updated: ", userId);
+    } catch (e) {
+        console.error("Error updating user: ", e);
+        throw e;
+    }
+}
+
+// Desactivar empresa
+export async function disableCompany(companyId) {
+    try {
+        const docRef = doc(db, "companies", companyId);
+        await updateDoc(docRef, { status: "inactive" });
+        
+        console.log("Company disabled: ", companyId);
+    } catch (e) {
+        console.error("Error disabling company: ", e);
+        throw e;
+    }
+}
+
+// Activar empresa
+export async function enableCompany(companyId) {
+    try {
+        const docRef = doc(db, "companies", companyId);
+        await updateDoc(docRef, { status: "active" });
+        
+        console.log("Company enabled: ", companyId);
+    } catch (e) {
+        console.error("Error enabling company: ", e);
+        throw e;
+    }
+}
