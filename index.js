@@ -1,143 +1,114 @@
-// index.js - Script para la página principal de DOMKA ERP
+// index.js - Funcionalidad para la página principal de DOMKA ERP
 
-// Importaciones de Firebase (versión modular)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { 
-    getAuth, 
-    onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-
-// Configuración de Firebase (debes reemplazar con tu configuración)
-const firebaseConfig = {
-    apiKey: "AIzaSyDyvK3PJK5gwZBTD3R8vQl-TPK7jo66ET4",
-    authDomain: "domka-erp.firebaseapp.com",
-    projectId: "domka-erp",
-    storageBucket: "domka-erp.firebasestorage.app",
-    messagingSenderId: "610583027018",
-    appId: "1:610583027018:web:46f6f25e532bec491e35b3"
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// Elementos del DOM
-const loginBtn = document.getElementById('login-btn');
-const registerBtn = document.getElementById('register-btn');
-const loginNavBtn = document.getElementById('login-nav-btn');
-const ctaRegisterBtn = document.getElementById('cta-register-btn');
-
-// Inicializar la página
-document.addEventListener('DOMContentLoaded', initPage);
-
-function initPage() {
+// Esperar a que el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar los event listeners para los botones
     setupEventListeners();
-    checkAuthState();
-}
-
-// Configurar event listeners
-function setupEventListeners() {
-    // Botón de inicio de sesión en el hero
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            redirectToAuth('login');
-        });
-    }
     
-    // Botón de registro en el hero
-    if (registerBtn) {
-        registerBtn.addEventListener('click', () => {
-            redirectToAuth('register');
-        });
-    }
-    
-    // Botón de inicio de sesión en la navegación
-    if (loginNavBtn) {
-        loginNavBtn.addEventListener('click', () => {
-            redirectToAuth('login');
-        });
-    }
-    
-    // Botón de registro en el CTA
-    if (ctaRegisterBtn) {
-        ctaRegisterBtn.addEventListener('click', () => {
-            redirectToAuth('register');
-        });
-    }
-}
-
-// Redirigir a la página de autenticación
-function redirectToAuth(mode = 'login') {
-    const authUrl = './modules/auth/index.html';
-    
-    if (mode === 'register') {
-        // Almacenar el modo de registro en sessionStorage
-        sessionStorage.setItem('auth_mode', 'register');
-    } else {
-        sessionStorage.setItem('auth_mode', 'login');
-    }
-    
-    window.location.href = authUrl;
-}
-
-// Verificar estado de autenticación
-function checkAuthState() {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // Usuario autenticado, redirigir al dashboard
-            window.location.href = './modules/dashboard/index.html';
-        }
-        // Si no hay usuario autenticado, permanecer en la página principal
-    });
-}
-
-// Cargar imágenes temporales si no existen
-function loadPlaceholderImages() {
-    // Esta función podría crear imágenes temporales si no existen
-    // Para una implementación real, deberías tener estas imágenes en tu carpeta assets
-}
-
-// Smooth scrolling para enlaces internos
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-        
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-            targetElement.scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
-    });
+    // Añadir smooth scrolling para los enlaces de navegación
+    setupSmoothScrolling();
 });
 
-// Efectos de animación al hacer scroll
-function initScrollAnimations() {
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
+// Configurar event listeners para los botones
+function setupEventListeners() {
+    // Botones de inicio de sesión
+    const loginBtn = document.getElementById('login-btn');
+    const loginNavBtn = document.getElementById('login-nav-btn');
+    
+    // Botones de registro
+    const registerBtn = document.getElementById('register-btn');
+    const ctaRegisterBtn = document.getElementById('cta-register-btn');
+    
+    // Redirigir al módulo de autenticación
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            window.location.href = '/modules/auth/index.html';
+        });
+    }
+    
+    if (loginNavBtn) {
+        loginNavBtn.addEventListener('click', () => {
+            window.location.href = '/modules/auth/index.html';
+        });
+    }
+    
+    if (registerBtn) {
+        registerBtn.addEventListener('click', () => {
+            window.location.href = '/modules/auth/index.html#register';
+        });
+    }
+    
+    if (ctaRegisterBtn) {
+        ctaRegisterBtn.addEventListener('click', () => {
+            window.location.href = '/modules/auth/index.html#register';
+        });
+    }
+}
+
+// Configurar smooth scrolling para enlaces internos
+function setupSmoothScrolling() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                // Calcular la posición considerando el header fijo
+                const headerOffset = 80;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+}
+
+// Efecto de revelación gradual para elementos al hacer scroll
+function setupScrollReveal() {
+    const revealElements = document.querySelectorAll('.feature-card, .cta');
     
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
+                entry.target.style.opacity = 1;
+                entry.target.style.transform = 'translateY(0)';
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.1 });
     
-    // Observar elementos para animar
-    document.querySelectorAll('.feature-card, .cta').forEach(el => {
-        observer.observe(el);
+    revealElements.forEach(element => {
+        element.style.opacity = 0;
+        element.style.transform = 'translateY(20px)';
+        element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(element);
     });
 }
 
-// Inicializar animaciones cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScrollAnimations);
-} else {
-    initScrollAnimations();
+// Inicializar efectos cuando la página esté cargada
+window.addEventListener('load', function() {
+    setupScrollReveal();
+});
+
+// Función para verificar si el usuario está autenticado y redirigir
+function checkAuthState() {
+    // Esta función se conectaría con Firebase en una implementación real
+    // Por ahora es un placeholder
+    console.log('Verificando estado de autenticación...');
 }
+
+// Exportar funciones para uso global (si es necesario)
+window.DOMKA = {
+    navigateToAuth: function() {
+        window.location.href = '/modules/auth/index.html';
+    },
+    navigateToRegister: function() {
+        window.location.href = '/modules/auth/index.html#register';
+    }
+};
