@@ -5,7 +5,7 @@ import {
     createUserWithEmailAndPassword, 
     sendPasswordResetEmail,
     onAuthStateChanged,
-    redirectBasedOnRole  // Ahora importada desde auth.js
+    redirectBasedOnRole
 } from '../../services/auth.js';
 import { 
     createUserDocument, 
@@ -82,8 +82,8 @@ function setupEventListeners() {
 function checkAuthState() {
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Usuario autenticado, redirigir según rol
-            redirectUserBasedOnRole(user.uid);
+            // Usuario autenticado, redirigir según rol - CORREGIDO
+            redirectBasedOnRole(user.uid);
         }
     });
 }
@@ -99,6 +99,13 @@ async function handleLogin(e) {
     
     if (!email || !password) {
         showMessage('Por favor, completa todos los campos', 'error');
+        return;
+    }
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage('Por favor, ingresa un correo electrónico válido', 'error');
         return;
     }
     
@@ -130,6 +137,9 @@ async function handleLogin(e) {
             case 'auth/wrong-password':
                 errorMessage = 'Contraseña incorrecta';
                 break;
+            case 'auth/too-many-requests':
+                errorMessage = 'Demasiados intentos fallidos. Intenta más tarde o restablece tu contraseña';
+                break;
             default:
                 errorMessage = 'Error al iniciar sesión. Inténtalo de nuevo más tarde.';
         }
@@ -141,6 +151,7 @@ async function handleLogin(e) {
         loginBtn.textContent = 'Iniciar Sesión';
     }
 }
+
 // Manejar registro de usuario
 async function handleRegister(e) {
     e.preventDefault();
@@ -159,6 +170,13 @@ async function handleRegister(e) {
         return;
     }
     
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage('Por favor, ingresa un correo electrónico válido', 'error');
+        return;
+    }
+    
     if (password !== confirmPassword) {
         showMessage('Las contraseñas no coinciden', 'error');
         return;
@@ -166,6 +184,11 @@ async function handleRegister(e) {
     
     if (password.length < 6) {
         showMessage('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    
+    if (companyName.length < 2) {
+        showMessage('El nombre de la empresa debe tener al menos 2 caracteres', 'error');
         return;
     }
     
@@ -179,44 +202,41 @@ async function handleRegister(e) {
         const user = userCredential.user;
         
         // Crear documento de empresa en Firestore
-        const companyId = await createCompanyDocument(companyName);
+        const companyData = {
+            name: companyName,
+            ownerId: user.uid,
+            plan: "free",
+            modules: {
+                clientes: true,
+                cotizaciones: true,
+                inventario: true,
+                contabilidad: false,
+                nomina: false,
+                pagos: false,
+                crm: false,
+                ai: false
+            },
+            createdAt: new Date(),
+            users: [user.uid]
+        };
+        
+        const companyId = await createCompanyDocument(companyData);
         
         // Crear documento de usuario en Firestore
         await createUserDocument(user.uid, {
             name,
             email,
-            role: 'admin', // El creador de la empresa es admin por defecto
+            role: 'admin',
             companyId,
             createdAt: new Date()
         });
         
         showMessage('Cuenta creada exitosamente. Redirigiendo...', 'success');
 
-        // En la función handleRegister, después de crear el usuario:
-const companyId = await createCompany({
-    name: companyName,
-    plan: "free", // Plan inicial gratuito
-    modules: { // Módulos básicos habilitados por defecto
-        clientes: true,
-        cotizaciones: true,
-        inventario: true,
-        contabilidad: false,
-        nomina: false,
-        pagos: false,
-        crm: false,
-        ai: false
-    }
-}, user.uid);
-
-// Asignar el usuario como admin de la empresa
-await updateDoc(doc(db, "users", user.uid), {
-    companyId: companyId,
-    role: "admin"
-});
         // Redirigir al dashboard después de un breve delay
         setTimeout(() => {
             redirectBasedOnRole(user.uid);
-        }, 1500);
+        }, 2000);
         
     } catch (error) {
         console.error('Error al registrar usuario:', error);
@@ -232,6 +252,9 @@ await updateDoc(doc(db, "users", user.uid), {
             case 'auth/weak-password':
                 errorMessage = 'La contraseña es demasiado débil';
                 break;
+            case 'auth/operation-not-allowed':
+                errorMessage = 'La creación de cuentas no está habilitada';
+                break;
             default:
                 errorMessage = 'Error al crear la cuenta. Inténtalo de nuevo más tarde.';
         }
@@ -242,7 +265,6 @@ await updateDoc(doc(db, "users", user.uid), {
         registerBtn.disabled = false;
         registerBtn.textContent = 'Crear Cuenta';
     }
-    
 }
 
 // Manejar recuperación de contraseña
@@ -258,6 +280,13 @@ async function handlePasswordReset(e) {
         return;
     }
     
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage('Por favor, ingresa un correo electrónico válido', 'error');
+        return;
+    }
+    
     isProcessing = true;
     resetBtn.disabled = true;
     resetBtn.textContent = 'Enviando...';
@@ -265,6 +294,9 @@ async function handlePasswordReset(e) {
     try {
         await sendPasswordResetEmail(auth, email);
         showMessage('Se ha enviado un enlace de recuperación a tu correo electrónico', 'success');
+        
+        // Limpiar el campo de email
+        document.getElementById('resetEmail').value = '';
         
         // Volver al formulario de login después de un breve delay
         setTimeout(() => {
@@ -315,10 +347,3 @@ function togglePasswordVisibility(inputId, button) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
-
-
-
-
-
-
-
