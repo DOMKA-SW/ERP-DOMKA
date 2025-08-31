@@ -129,6 +129,32 @@ function setupEventListeners() {
     });
 }
 
+async function loadDashboardData() {
+    try {
+        if (!currentUser) return;
+        
+        let metrics;
+        
+        if (currentUser.role === 'superadmin') {
+            // Superadmin ve métricas de todas las empresas
+            metrics = await getGlobalMetrics();
+        } else {
+            // Usuarios normales ven métricas de su empresa only
+            metrics = await getCompanyMetrics(currentUser.companyId);
+        }
+        
+        updateMetrics(metrics);
+        
+        // Cargar cotizaciones recientes de la empresa
+        const quotes = await getQuotesByCompany(currentUser.companyId);
+        displayRecentQuotes(quotes);
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showNotification('Error al cargar datos del dashboard', 'error');
+    }
+}
+
 // Verificar estado de autenticación
 function checkAuthState() {
     onAuthStateChanged(auth, async (user) => {
@@ -681,6 +707,7 @@ function loadNavigation(user) {
         });
     });
 }
+
 
 
 
