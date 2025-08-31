@@ -405,3 +405,30 @@ export async function enableCompany(companyId) {
         throw e;
     }
 }
+
+// Obtener el rol del usuario y redirigir
+export async function redirectUserBasedOnRole(userId) {
+    try {
+        const role = await getUserRole(userId);
+        
+        if (role === 'superadmin') {
+            window.location.href = '/modules/superadmin/index.html';
+        } else {
+            window.location.href = '/modules/dashboard/index.html';
+        }
+    } catch (error) {
+        console.error('Error al redirigir usuario:', error);
+        // Mostrar mensaje de error
+        const authMessage = document.getElementById('authMessage');
+        if (authMessage) {
+            authMessage.textContent = 'Error al cargar tu perfil. Inténtalo de nuevo.';
+            authMessage.classList.remove('hidden', 'success', 'error');
+            authMessage.classList.add('error');
+        }
+        
+        // Forzar redirección al dashboard después de 3 segundos si hay error
+        setTimeout(() => {
+            window.location.href = '/modules/dashboard/index.html';
+        }, 3000);
+    }
+}
