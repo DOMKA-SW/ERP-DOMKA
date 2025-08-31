@@ -45,14 +45,80 @@ export async function getUserRole(userId) {
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-            return docSnap.data().role;
+            const userData = docSnap.data();
+            return userData.role || "user"; // Valor por defecto "user"
         } else {
-            console.log("No such document!");
-            return 'user'; // Rol por defecto
+            // Si no existe el documento, es un usuario nuevo
+            return "user"; // Rol por defecto
         }
     } catch (e) {
-        console.error("Error getting document: ", e);
-        return 'user'; // Rol por defecto en caso de error
+        console.error("Error getting user role: ", e);
+        return "user"; // Rol por defecto en caso de error
+    }
+}
+
+// Obtener datos del usuario con información de la empresa
+export async function getUserData(userId) {
+    try {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        
+        if (userDoc.exists()) {
+            const userData = { id: userId, ...userDoc.data() };
+            
+            // Si pertenece a una empresa, obtener datos de la empresa
+            if (userData.companyId) {
+                const companyDoc = await getDoc(doc(db, "companies", userData.companyId));
+                if (companyDoc.exists()) {
+                    userData.company = { id: userData.companyId, ...companyDoc.data() };
+                }
+            }
+            
+            return userData;
+        } else {
+            console.log("No such user document!");
+            return null;
+        }
+    } catch (e) {
+        console.error("Error getting user document: ", e);
+        throw e;
+    }
+}
+
+// Crear una nueva empresa (solo superadmin)
+export async function createCompany(companyData, createdBy) {
+    try {
+        const docRef = await addDoc(collection(db, "companies"), {
+            ...companyData,
+            createdBy: createdBy,
+            createdAt: new Date(),
+            status: "active"
+        });
+        
+        console.log("Company created with ID: ", docRef.id);
+        return docRef.id;
+    } catch (e) {
+        console.error("Error adding company: ", e);
+        throw e;
+    }
+}
+
+// Crear usuario con rol específico (solo superadmin o admin de la misma empresa)
+export async function createUserWithRole(userData, createdBy, companyId = null) {
+    try {
+        // Verificar permisos (esto se implementaría después)
+        
+        const docRef = await addDoc(collection(db, "users"), {
+            ...userData,
+            companyId: companyId,
+            createdAt: new Date(),
+            lastLogin: null
+        });
+        
+        console.log("User created with ID: ", docRef.id);
+        return docRef.id;
+    } catch (e) {
+        console.error("Error adding user: ", e);
+        throw e;
     }
 }
 
