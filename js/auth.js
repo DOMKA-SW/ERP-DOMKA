@@ -4,8 +4,8 @@ import {
   signOut, 
   onAuthStateChanged,
   createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 
 /* -------------------- REGISTRO -------------------- */
 const registerForm = document.getElementById("registerForm");
