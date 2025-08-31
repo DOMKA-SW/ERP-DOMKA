@@ -8,6 +8,36 @@
     <ul id="companies-ul"></ul>
   </div>
 
+  <section class="admin-module">
+  <h2>Gestión de Empresas</h2>
+
+  <!-- Crear empresa -->
+  <form id="create-company-form">
+    <input type="text" id="company-name" placeholder="Nombre de la empresa" required>
+    <button type="submit">➕ Crear Empresa</button>
+  </form>
+
+  <!-- Listado -->
+  <div class="companies-list">
+    <h3>Empresas Registradas</h3>
+    <ul id="companies-ul"></ul>
+  </div>
+
+  <!-- Asignar usuario -->
+  <div class="assign-user">
+    <h3>Asignar Usuario a Empresa</h3>
+    <form id="assign-user-form">
+      <select id="company-select" required></select>
+      <input type="email" id="user-email" placeholder="Email del usuario" required>
+      <select id="user-role">
+        <option value="user">Usuario</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit">Asignar</button>
+    </form>
+  </div>
+</section>
+
   <div class="users-list">
     <h3>Usuarios Globales</h3>
     <ul id="users-ul"></ul>
