@@ -1,25 +1,9 @@
-// Verificar permisos antes de cargar el módulo
-import { checkModulePermission } from '../../services/middleware.js';
-
-async function init() {
-    // Verificar permisos para este módulo
-    const hasAccess = await checkModulePermission('clientes');
-    if (!hasAccess) {
-        window.location.href = '/modules/dashboard/index.html';
-        return;
-    }
-    
-    // El resto de la inicialización...
-    setupEventListeners();
-    loadClientesData();
-}
-
 // Importar servicios y configuraciones
 import { 
     auth, 
     signOut, 
     onAuthStateChanged 
-} from '../../services/auth.js'; // Cambiado a auth.js
+} from '../../services/auth.js';
 import { 
     getUserData, 
     getCompanyData, 
@@ -28,9 +12,12 @@ import {
     getRecentActivity,
     getUserTasks,
     createQuickQuote,
-    createTask 
+    createTask,
+    updateTask,
+    getClientsByCompany
 } from '../../services/database.js';
 import { showNotification, formatCurrency, formatDate } from '../../services/helpers.js';
+import { hasPermission, filterNavigationByRole } from '../../services/permissions.js';
 
 // Elementos del DOM
 const sidebar = document.getElementById('sidebar');
@@ -72,11 +59,22 @@ let revenueChart = null;
 let currentUser = null;
 let currentCompany = null;
 
+// Navegación con identificación de módulos
+const navigationItems = [
+    { module: "clientes", icon: "👥", text: "Clientes" },
+    { module: "cotizaciones", icon: "📋", text: "Cotizaciones" },
+    { module: "inventario", icon: "📦", text: "Inventario" },
+    { module: "contabilidad", icon: "📒", text: "Contabilidad" },
+    { module: "nomina", icon: "💰", text: "Nómina" },
+    { module: "pagos", icon: "💳", text: "Pagos" },
+    { module: "crm", icon: "🤝", text: "CRM" },
+    { module: "ai", icon: "🤖", text: "Asistente AI" }
+];
+
 // Inicializar la aplicación
 function init() {
     setupEventListeners();
     checkAuthState();
-    loadNavigation();
 }
 
 // Configurar event listeners
@@ -104,15 +102,15 @@ function setupEventListeners() {
         showModal(addTaskModal);
     });
     
-    // Cerrar modales - Corrección aplicada aquí
+    // Cerrar modales
     closeQuoteModal.addEventListener('click', () => hideModal(quickQuoteModal));
     cancelQuote.addEventListener('click', () => hideModal(quickQuoteModal));
     closeTaskModal.addEventListener('click', () => hideModal(addTaskModal));
     cancelTask.addEventListener('click', () => hideModal(addTaskModal));
     
-    // Envío de formularios - Corrección aplicada aquí
+    // Envío de formularios
     quickQuoteForm.addEventListener('submit', handleQuickQuote);
-    addTaskForm.addEventListener('submit', handleAddTask); // Cambiado de 'click' a 'submit'
+    addTaskForm.addEventListener('submit', handleAddTask);
     
     // Cerrar modales al hacer clic fuera
     document.addEventListener('click', (e) => {
@@ -127,32 +125,6 @@ function setupEventListeners() {
             hideModal(addTaskModal);
         }
     });
-}
-
-async function loadDashboardData() {
-    try {
-        if (!currentUser) return;
-        
-        let metrics;
-        
-        if (currentUser.role === 'superadmin') {
-            // Superadmin ve métricas de todas las empresas
-            metrics = await getGlobalMetrics();
-        } else {
-            // Usuarios normales ven métricas de su empresa only
-            metrics = await getCompanyMetrics(currentUser.companyId);
-        }
-        
-        updateMetrics(metrics);
-        
-        // Cargar cotizaciones recientes de la empresa
-        const quotes = await getQuotesByCompany(currentUser.companyId);
-        displayRecentQuotes(quotes);
-        
-    } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        showNotification('Error al cargar datos del dashboard', 'error');
-    }
 }
 
 // Verificar estado de autenticación
@@ -181,7 +153,19 @@ async function loadUserData(userId) {
         userAvatarElement.querySelector('span').textContent = userData.name.charAt(0).toUpperCase();
         
         // Personalizar mensaje de bienvenida
-        welcomeTitleElement.textContent = `Bienvenido${userData.name ? `, ${userData.name}` : ''}`;
+        if (userData.role === 'superadmin') {
+            welcomeTitleElement.textContent = `Panel de Control Global`;
+            welcomeMessageElement.textContent = `Gestión de todas las empresas del sistema`;
+        } else if (userData.company) {
+            welcomeTitleElement.textContent = `Bienvenido, ${userData.name}`;
+            welcomeMessageElement.textContent = `Panel de ${userData.company.name}`;
+        } else {
+            welcomeTitleElement.textContent = `Bienvenido, ${userData.name}`;
+            welcomeMessageElement.textContent = `Resumen de tu empresa`;
+        }
+        
+        // Filtrar y cargar navegación según permisos
+        loadNavigation(userData);
         
     } catch (error) {
         console.error('Error al cargar datos del usuario:', error);
@@ -197,7 +181,9 @@ async function loadCompanyData() {
         const userData = await getUserData(currentUser.uid);
         if (userData.companyId) {
             currentCompany = await getCompanyData(userData.companyId);
-            welcomeMessageElement.textContent = `Resumen de ${currentCompany.name}`;
+            if (currentCompany) {
+                welcomeMessageElement.textContent = `Resumen de ${currentCompany.name}`;
+            }
         }
     } catch (error) {
         console.error('Error al cargar datos de la empresa:', error);
@@ -252,13 +238,13 @@ function displayRecentQuotes(quotes) {
         return;
     }
     
-    const quotesHTML = quotes.map(quote => `
+    const quotesHTML = quotes.slice(0, 5).map(quote => `
         <div class="recent-item">
             <div class="recent-info">
-                <h4>${quote.clientName}</h4>
-                <p>${quote.description}</p>
+                <h4>${quote.clientName || 'Cliente'}</h4>
+                <p>${quote.description || 'Sin descripción'}</p>
             </div>
-            <div class="recent-amount">${formatCurrency(quote.amount)}</div>
+            <div class="recent-amount">${formatCurrency(quote.amount || 0)}</div>
         </div>
     `).join('');
     
@@ -272,7 +258,7 @@ function displayTasks(tasks) {
         return;
     }
     
-    const tasksHTML = tasks.map(task => `
+    const tasksHTML = tasks.slice(0, 5).map(task => `
         <div class="task-item">
             <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-task-id="${task.id}">
                 ${task.completed ? '✓' : ''}
@@ -300,7 +286,7 @@ function displayRecentActivity(activities) {
         return;
     }
     
-    const activityHTML = activities.map(activity => `
+    const activityHTML = activities.slice(0, 5).map(activity => `
         <div class="activity-item">
             <div class="activity-icon">${getActivityIcon(activity.type)}</div>
             <div class="activity-content">
@@ -377,16 +363,13 @@ function initRevenueChart(data) {
 // Cargar clientes para cotización rápida
 async function loadClientsForQuote() {
     try {
-        // En una implementación real, esto cargaría clientes desde Firestore
         const quoteClientSelect = document.getElementById('quoteClient');
         quoteClientSelect.innerHTML = '<option value="">Seleccionar cliente</option>';
         
-        // Simulación de carga de clientes
-        const clients = [
-            { id: '1', name: 'Constructora Andina S.A.' },
-            { id: '2', name: 'Inmobiliaria Pacifico' },
-            { id: '3', name: 'Edificaciones Modernas' }
-        ];
+        if (!currentUser || !currentCompany) return;
+        
+        const userData = await getUserData(currentUser.uid);
+        const clients = await getClientsByCompany(userData.companyId);
         
         clients.forEach(client => {
             const option = document.createElement('option');
@@ -398,6 +381,13 @@ async function loadClientsForQuote() {
     } catch (error) {
         console.error('Error al cargar clientes:', error);
         showNotification('Error al cargar la lista de clientes', 'error');
+        
+        // Opción por defecto en caso de error
+        const quoteClientSelect = document.getElementById('quoteClient');
+        const option = document.createElement('option');
+        option.value = 'default';
+        option.textContent = 'Cliente General';
+        quoteClientSelect.appendChild(option);
     }
 }
 
@@ -421,6 +411,21 @@ async function handleQuickQuote(e) {
             createdAt: new Date()
         };
         
+        // Validaciones
+        if (!quoteData.clientId || quoteData.clientId === '') {
+            showNotification('Por favor, selecciona un cliente', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+        
+        if (!quoteData.description || !quoteData.amount || !quoteData.validUntil) {
+            showNotification('Por favor, completa todos los campos', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+        
         await createQuickQuote(currentUser.uid, currentCompany.id, quoteData);
         
         showNotification('Cotización creada exitosamente', 'success');
@@ -439,7 +444,7 @@ async function handleQuickQuote(e) {
     }
 }
 
-// Manejar agregar tarea - Versión corregida
+// Manejar agregar tarea
 async function handleAddTask(e) {
     e.preventDefault();
     
@@ -463,11 +468,15 @@ async function handleAddTask(e) {
         // Validaciones
         if (!taskData.title || !taskData.dueDate) {
             showNotification('Por favor, completa todos los campos obligatorios', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
             return;
         }
         
         if (new Date(taskData.dueDate) < new Date().setHours(0, 0, 0, 0)) {
             showNotification('La fecha límite no puede ser en el pasado', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
             return;
         }
         
@@ -497,9 +506,12 @@ async function toggleTaskCompletion(e) {
     const isCompleted = checkbox.classList.contains('checked');
     
     try {
-        // En una implementación real, esto actualizaría el estado en Firestore
+        // Actualizar el estado visualmente primero
         checkbox.classList.toggle('checked');
         checkbox.innerHTML = isCompleted ? '' : '✓';
+        
+        // Actualizar en la base de datos
+        await updateTask(taskId, { completed: !isCompleted });
         
         showNotification(`Tarea ${isCompleted ? 'reactivada' : 'completada'}`, 'success');
         
@@ -513,7 +525,7 @@ async function toggleTaskCompletion(e) {
     }
 }
 
-// Manejar cierre de sesión - Versión corregida
+// Manejar cierre de sesión
 async function handleLogout() {
     try {
         await signOut(auth);
@@ -530,7 +542,7 @@ function toggleSidebar() {
     sidebar.classList.toggle('open');
 }
 
-// Mostrar modal - Versión mejorada
+// Mostrar modal
 function showModal(modal) {
     modal.classList.remove('hidden');
     setTimeout(() => {
@@ -539,7 +551,7 @@ function showModal(modal) {
     document.body.style.overflow = 'hidden';
 }
 
-// Ocultar modal - Versión mejorada
+// Ocultar modal
 function hideModal(modal) {
     modal.classList.remove('open');
     setTimeout(() => {
@@ -550,70 +562,18 @@ function hideModal(modal) {
 
 // Navegar a módulo
 function navigateToModule(module) {
-    window.location.href = `/modules/${module}/`;
-}
-
-// Cargar navegación según permisos
-function loadNavigation() {
-    // En una implementación real, esto ocultaría elementos según el rol del usuario
-    // Por ahora es solo un esqueleto para la funcionalidad
-}
-
-// Inicializar la aplicación cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', init);
-
-// Importar sistema de permisos
-import { hasPermission, filterNavigationByRole } from '../../services/permissions.js';
-
-// Navegación con identificación de módulos
-const navigationItems = [
-    { module: "clientes", icon: "👥", text: "Clientes" },
-    { module: "cotizaciones", icon: "📋", text: "Cotizaciones" },
-    { module: "inventario", icon: "📦", text: "Inventario" },
-    { module: "contabilidad", icon: "📒", text: "Contabilidad" },
-    { module: "nomina", icon: "💰", text: "Nómina" },
-    { module: "pagos", icon: "💳", text: "Pagos" },
-    { module: "crm", icon: "🤝", text: "CRM" },
-    { module: "ai", icon: "🤖", text: "Asistente AI" }
-];
-
-// En la función loadUserData, después de cargar los datos del usuario:
-async function loadUserData(userId) {
-    try {
-        const userData = await getUserData(userId);
-        
-        // Actualizar UI con datos del usuario
-        userNameElement.textContent = userData.name;
-        userRoleElement.textContent = userData.role;
-        userAvatarElement.querySelector('span').textContent = userData.name.charAt(0).toUpperCase();
-        
-        // Personalizar mensaje de bienvenida
-        if (userData.role === 'superadmin') {
-            welcomeTitleElement.textContent = `Panel de Control Global`;
-            welcomeMessageElement.textContent = `Gestión de todas las empresas del sistema`;
-        } else if (userData.company) {
-            welcomeTitleElement.textContent = `Bienvenido, ${userData.name}`;
-            welcomeMessageElement.textContent = `Panel de ${userData.company.name}`;
-        }
-        
-        // Filtrar y cargar navegación según permisos
-        loadNavigation(userData);
-        
-    } catch (error) {
-        console.error('Error al cargar datos del usuario:', error);
-        showNotification('Error al cargar datos del usuario', 'error');
-    }
+    window.location.href = `/modules/${module}/index.html`;
 }
 
 // Cargar navegación según permisos
 function loadNavigation(user) {
-    const navContainer = document.getElementById('sidebar-nav');
-    const filteredNav = filterNavigationByRole(navigationItems, user);
+    const navContainer = document.querySelector('.sidebar-nav');
     
-    let navHTML = '';
+    // Limpiar navegación existente
+    navContainer.innerHTML = '';
     
     // Sección Principal
-    navHTML += `
+    let navHTML = `
         <div class="nav-section">
             <h3>Principal</h3>
             <ul>
@@ -627,15 +587,20 @@ function loadNavigation(user) {
         </div>
     `;
     
-    // Sección de Gestión (solo si tiene al menos un módulo)
-    if (filteredNav.length > 0) {
+    // Sección de Gestión
+    const managementModules = navigationItems.filter(item => 
+        item.module !== 'crm' && item.module !== 'ai' && 
+        hasPermission(user, 'access_module', item.module)
+    );
+    
+    if (managementModules.length > 0) {
         navHTML += `
             <div class="nav-section">
                 <h3>Gestión</h3>
                 <ul>
         `;
         
-        filteredNav.forEach(item => {
+        managementModules.forEach(item => {
             navHTML += `
                 <li class="nav-item">
                     <a href="#" data-module="${item.module}">
@@ -652,37 +617,59 @@ function loadNavigation(user) {
         `;
     }
     
-    // Sección de Herramientas (si tiene permisos)
-    if (hasPermission(user, 'access_module', 'crm') || 
-        hasPermission(user, 'access_module', 'ai')) {
+    // Sección de Finanzas
+    const financeModules = navigationItems.filter(item => 
+        ['contabilidad', 'nomina', 'pagos'].includes(item.module) &&
+        hasPermission(user, 'access_module', item.module)
+    );
+    
+    if (financeModules.length > 0) {
+        navHTML += `
+            <div class="nav-section">
+                <h3>Finanzas</h3>
+                <ul>
+        `;
         
+        financeModules.forEach(item => {
+            navHTML += `
+                <li class="nav-item">
+                    <a href="#" data-module="${item.module}">
+                        <span class="nav-icon">${item.icon}</span>
+                        <span class="nav-text">${item.text}</span>
+                    </a>
+                </li>
+            `;
+        });
+        
+        navHTML += `
+                </ul>
+            </div>
+        `;
+    }
+    
+    // Sección de Herramientas
+    const toolModules = navigationItems.filter(item => 
+        ['crm', 'ai'].includes(item.module) &&
+        hasPermission(user, 'access_module', item.module)
+    );
+    
+    if (toolModules.length > 0) {
         navHTML += `
             <div class="nav-section">
                 <h3>Herramientas</h3>
                 <ul>
         `;
         
-        if (hasPermission(user, 'access_module', 'crm')) {
+        toolModules.forEach(item => {
             navHTML += `
                 <li class="nav-item">
-                    <a href="#" data-module="crm">
-                        <span class="nav-icon">🤝</span>
-                        <span class="nav-text">CRM</span>
+                    <a href="#" data-module="${item.module}">
+                        <span class="nav-icon">${item.icon}</span>
+                        <span class="nav-text">${item.text}</span>
                     </a>
                 </li>
             `;
-        }
-        
-        if (hasPermission(user, 'access_module', 'ai')) {
-            navHTML += `
-                <li class="nav-item">
-                    <a href="#" data-module="ai">
-                        <span class="nav-icon">🤖</span>
-                        <span class="nav-text">Asistente AI</span>
-                    </a>
-                </li>
-            `;
-        }
+        });
         
         navHTML += `
                 </ul>
@@ -708,7 +695,5 @@ function loadNavigation(user) {
     });
 }
 
-
-
-
-
+// Inicializar la aplicación cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', init);
