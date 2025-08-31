@@ -83,7 +83,6 @@ function checkAuthState() {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // Usuario autenticado, redirigir según rol
-            import { redirectUserBasedOnRole } from '../../services/database.js';
             redirectUserBasedOnRole(user.uid);
         }
     });
@@ -295,4 +294,5 @@ function togglePasswordVisibility(inputId, button) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
 
