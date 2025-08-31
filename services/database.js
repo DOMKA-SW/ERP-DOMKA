@@ -7,7 +7,8 @@ import {
     addDoc,
     query,
     where,
-    getDocs 
+    getDocs,
+    updateDoc 
 } from './firebase-config.js';
 
 // Crear documento de usuario en Firestore
@@ -130,25 +131,6 @@ export async function getCompanyData(companyId) {
         
         if (docSnap.exists()) {
             return docSnap.data();
-        } else {
-            console.log("No such document!");
-            return null;
-        }
-    } catch (e) {
-        console.error("Error getting document: ", e);
-        throw e;
-    }
-}
-
-
-// Obtener datos del usuario
-export async function getUserData(userId) {
-    try {
-        const docRef = doc(db, "users", userId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            return { id: userId, ...docSnap.data() };
         } else {
             console.log("No such document!");
             return null;
@@ -313,8 +295,6 @@ export async function createTask(taskData) {
     }
 }
 
-// ... (código anterior)
-
 // Obtener todas las empresas
 export async function getAllCompanies() {
     try {
@@ -399,23 +379,6 @@ export async function getSystemActivity() {
         ];
     } catch (e) {
         console.error("Error getting system activity: ", e);
-        throw e;
-    }
-}
-
-// Crear empresa
-export async function createCompany(companyData) {
-    try {
-        const docRef = await addDoc(collection(db, "companies"), {
-            ...companyData,
-            createdAt: new Date(),
-            userCount: 0
-        });
-        
-        console.log("Company created with ID: ", docRef.id);
-        return docRef.id;
-    } catch (e) {
-        console.error("Error adding company: ", e);
         throw e;
     }
 }
