@@ -22,25 +22,25 @@ function setupEventListeners() {
     // Redirigir al módulo de autenticación
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
-            window.location.href = '/modules/auth/index.html';
+            window.location.href = '/ERP-DOMKA/modules/auth/index.html';
         });
     }
     
     if (loginNavBtn) {
         loginNavBtn.addEventListener('click', () => {
-            window.location.href = '/modules/auth/index.html';
+            window.location.href = '/ERP-DOMKA/modules/auth/index.html';
         });
     }
     
     if (registerBtn) {
         registerBtn.addEventListener('click', () => {
-            window.location.href = '/modules/auth/index.html#register';
+            window.location.href = '/ERP-DOMKA/modules/auth/index.html#register';
         });
     }
     
     if (ctaRegisterBtn) {
         ctaRegisterBtn.addEventListener('click', () => {
-            window.location.href = '/modules/auth/index.html#register';
+            window.location.href = '/ERP-DOMKA/modules/auth/index.html#register';
         });
     }
 }
