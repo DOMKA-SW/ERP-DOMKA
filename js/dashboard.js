@@ -1,4 +1,3 @@
-// dashboard.js
 import { auth, db } from "./firebase.js";
 import { 
   signOut, onAuthStateChanged, createUserWithEmailAndPassword 
