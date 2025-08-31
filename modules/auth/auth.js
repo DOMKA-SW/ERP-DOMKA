@@ -1,144 +1,144 @@
-// auth.js - Módulo de autenticación para DOMKA ERP
-
-// Importaciones de Firebase (versión modular)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+// Importar configuración de Firebase
 import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
+    auth, 
     signInWithEmailAndPassword, 
-    signOut, 
+    createUserWithEmailAndPassword, 
+    sendPasswordResetEmail,
     onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+} from '../../services/firebase-config.js';
 import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc, 
-    collection, 
-    addDoc, 
-    query, 
-    where, 
-    getDocs 
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-// Configuración de Firebase (debes reemplazar con tu configuración)
-const firebaseConfig = {
-    apiKey: "AIzaSyDyvK3PJK5gwZBTD3R8vQl-TPK7jo66ET4",
-    authDomain: "domka-erp.firebaseapp.com",
-    projectId: "domka-erp",
-    storageBucket: "domka-erp.firebasestorage.app",
-    messagingSenderId: "610583027018",
-    appId: "1:610583027018:web:46f6f25e532bec491e35b3"
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    createUserDocument, 
+    createCompanyDocument, 
+    getUserRole 
+} from '../../services/database.js';
+import { showMessage, redirectBasedOnRole } from '../../services/helpers.js';
 
 // Elementos del DOM
 const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
+const resetPasswordForm = document.getElementById('resetPasswordForm');
 const showRegisterBtn = document.getElementById('showRegister');
 const showLoginBtn = document.getElementById('showLogin');
-const loginFormContainer = document.getElementById('login-form');
-const registerFormContainer = document.getElementById('register-form');
-const companyOptionRadios = document.getElementsByName('companyOption');
-const newCompanyGroup = document.getElementById('newCompanyGroup');
-const existingCompanyGroup = document.getElementById('existingCompanyGroup');
-const authAlert = document.getElementById('authAlert');
-const alertMessage = document.getElementById('alertMessage');
-const closeAlertBtn = document.getElementById('closeAlert');
+const forgotPasswordBtn = document.getElementById('forgotPassword');
+const backToLoginBtn = document.getElementById('backToLogin');
+const togglePasswordBtn = document.getElementById('togglePassword');
+const toggleRegisterPasswordBtn = document.getElementById('toggleRegisterPassword');
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const resetBtn = document.getElementById('resetBtn');
 
-// Variables globales
-let currentUser = null;
+// Estado de la aplicación
+let isProcessing = false;
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', initAuthModule);
-
-// Inicialización del módulo de autenticación
-function initAuthModule() {
+// Inicializar la aplicación
+function init() {
     setupEventListeners();
     checkAuthState();
 }
 
 // Configurar event listeners
 function setupEventListeners() {
-    // Alternar entre formularios de login y registro
-    showRegisterBtn.addEventListener('click', showRegisterForm);
-    showLoginBtn.addEventListener('click', showLoginForm);
+    // Alternar entre formularios
+    showRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showForm(registerForm);
+        hideForms([loginForm, resetPasswordForm]);
+    });
+    
+    showLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showForm(loginForm);
+        hideForms([registerForm, resetPasswordForm]);
+    });
+    
+    forgotPasswordBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showForm(resetPasswordForm);
+        hideForms([loginForm, registerForm]);
+    });
+    
+    backToLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showForm(loginForm);
+        hideForms([registerForm, resetPasswordForm]);
+    });
+    
+    // Alternar visibilidad de contraseñas
+    togglePasswordBtn.addEventListener('click', () => {
+        togglePasswordVisibility('password', togglePasswordBtn);
+    });
+    
+    toggleRegisterPasswordBtn.addEventListener('click', () => {
+        togglePasswordVisibility('registerPassword', toggleRegisterPasswordBtn);
+    });
     
     // Envío de formularios
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handleRegister);
-    
-    // Cambio entre opciones de empresa
-    companyOptionRadios.forEach(radio => {
-        radio.addEventListener('change', toggleCompanyOption);
-    });
-    
-    // Cerrar alerta
-    closeAlertBtn.addEventListener('click', hideAlert);
+    resetPasswordForm.addEventListener('submit', handlePasswordReset);
 }
 
 // Verificar estado de autenticación
 function checkAuthState() {
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Usuario autenticado, redirigir al dashboard
-            currentUser = user;
-            window.location.href = '../dashboard/dashboard.html';
-        } else {
-            // Usuario no autenticado, mostrar formulario de login
-            currentUser = null;
-            showLoginForm();
+            // Usuario autenticado, redirigir según rol
+            redirectBasedOnRole(user.uid);
         }
     });
-}
-
-// Mostrar formulario de registro
-function showRegisterForm(e) {
-    if (e) e.preventDefault();
-    loginFormContainer.classList.remove('active');
-    registerFormContainer.classList.add('active');
-}
-
-// Mostrar formulario de login
-function showLoginForm(e) {
-    if (e) e.preventDefault();
-    registerFormContainer.classList.remove('active');
-    loginFormContainer.classList.add('active');
-}
-
-// Alternar entre opciones de empresa (nueva/existente)
-function toggleCompanyOption() {
-    const selectedOption = document.querySelector('input[name="companyOption"]:checked').value;
-    
-    if (selectedOption === 'new') {
-        newCompanyGroup.classList.remove('hidden');
-        existingCompanyGroup.classList.add('hidden');
-    } else {
-        newCompanyGroup.classList.add('hidden');
-        existingCompanyGroup.classList.remove('hidden');
-    }
 }
 
 // Manejar inicio de sesión
 async function handleLogin(e) {
     e.preventDefault();
     
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    if (isProcessing) return;
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        showMessage('Por favor, completa todos los campos', 'error');
+        return;
+    }
+    
+    isProcessing = true;
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Iniciando sesión...';
     
     try {
-        showLoading(true);
-        await loginUser(email, password);
-        showAlert('Inicio de sesión exitoso', 'success');
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        // Redirigir según el rol del usuario
+        redirectBasedOnRole(user.uid);
+        
     } catch (error) {
-        console.error('Error en inicio de sesión:', error);
-        showAlert(getAuthErrorMessage(error.code), 'error');
+        console.error('Error al iniciar sesión:', error);
+        let errorMessage = 'Error al iniciar sesión';
+        
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'El correo electrónico no es válido';
+                break;
+            case 'auth/user-disabled':
+                errorMessage = 'Esta cuenta ha sido deshabilitada';
+                break;
+            case 'auth/user-not-found':
+                errorMessage = 'No existe una cuenta con este correo electrónico';
+                break;
+            case 'auth/wrong-password':
+                errorMessage = 'Contraseña incorrecta';
+                break;
+            default:
+                errorMessage = 'Error al iniciar sesión. Inténtalo de nuevo más tarde.';
+        }
+        
+        showMessage(errorMessage, 'error');
     } finally {
-        showLoading(false);
+        isProcessing = false;
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Iniciar Sesión';
     }
 }
 
@@ -146,194 +146,151 @@ async function handleLogin(e) {
 async function handleRegister(e) {
     e.preventDefault();
     
+    if (isProcessing) return;
+    
     const name = document.getElementById('registerName').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
-    const companyOption = document.querySelector('input[name="companyOption"]:checked').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const companyName = document.getElementById('companyName').value;
     
-    try {
-        showLoading(true);
-        
-        let companyId;
-        let userRole = 'usuario';
-        
-        if (companyOption === 'new') {
-            // Crear nueva empresa
-            const companyName = document.getElementById('companyName').value;
-            if (!companyName) {
-                throw new Error('El nombre de la empresa es requerido');
-            }
-            
-            companyId = await createNewCompany(companyName);
-            userRole = 'admin'; // El creador de la empresa es admin
-        } else {
-            // Unirse a empresa existente
-            const companyCode = document.getElementById('companyCode').value;
-            if (!companyCode) {
-                throw new Error('El código de empresa es requerido');
-            }
-            
-            companyId = await joinExistingCompany(companyCode);
-        }
-        
-        // Registrar usuario
-        await registerUser(name, email, password, companyId, userRole);
-        showAlert('Usuario registrado correctamente', 'success');
-        
-        // Iniciar sesión automáticamente después del registro
-        await loginUser(email, password);
-    } catch (error) {
-        console.error('Error en registro:', error);
-        showAlert(error.message, 'error');
-    } finally {
-        showLoading(false);
+    // Validaciones
+    if (!name || !email || !password || !confirmPassword || !companyName) {
+        showMessage('Por favor, completa todos los campos', 'error');
+        return;
     }
-}
-
-// Función para registrar usuario en Firebase Auth y Firestore
-async function registerUser(name, email, password, companyId, role = 'usuario') {
+    
+    if (password !== confirmPassword) {
+        showMessage('Las contraseñas no coinciden', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showMessage('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    
+    isProcessing = true;
+    registerBtn.disabled = true;
+    registerBtn.textContent = 'Creando cuenta...';
+    
     try {
         // Crear usuario en Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
-        // Guardar información adicional en Firestore
-        await setDoc(doc(db, "usuarios", user.uid), {
-            uid: user.uid,
-            nombre: name,
-            email: email,
-            empresa_id: companyId,
-            rol: role,
-            fecha_creacion: new Date()
+        // Crear documento de empresa en Firestore
+        const companyId = await createCompanyDocument(companyName);
+        
+        // Crear documento de usuario en Firestore
+        await createUserDocument(user.uid, {
+            name,
+            email,
+            role: 'admin', // El creador de la empresa es admin por defecto
+            companyId,
+            createdAt: new Date()
         });
         
-        return user;
-    } catch (error) {
-        throw error;
-    }
-}
-
-// Función para iniciar sesión
-async function loginUser(email, password) {
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
-    } catch (error) {
-        throw error;
-    }
-}
-
-// Función para cerrar sesión (exportada para uso en otros módulos)
-window.logoutUser = async function() {
-    try {
-        await signOut(auth);
-        window.location.href = '../auth/auth.html';
-    } catch (error) {
-        console.error('Error al cerrar sesión:', error);
-    }
-}
-
-// Crear nueva empresa en Firestore
-async function createNewCompany(companyName) {
-    try {
-        // Generar ID único para la empresa
-        const companyId = generateCompanyId(companyName);
+        showMessage('Cuenta creada exitosamente. Redirigiendo...', 'success');
         
-        // Guardar empresa en Firestore
-        const companyRef = doc(db, "empresas", companyId);
-        await setDoc(companyRef, {
-            id: companyId,
-            nombre: companyName,
-            fecha_creacion: new Date(),
-            estado: 'activa'
-        });
+        // Redirigir al dashboard después de un breve delay
+        setTimeout(() => {
+            redirectBasedOnRole(user.uid);
+        }, 1500);
         
-        return companyId;
     } catch (error) {
-        throw error;
-    }
-}
-
-// Unirse a empresa existente
-async function joinExistingCompany(companyCode) {
-    try {
-        // Verificar que la empresa existe
-        const companyRef = doc(db, "empresas", companyCode);
-        const companyDoc = await getDoc(companyRef);
+        console.error('Error al registrar usuario:', error);
+        let errorMessage = 'Error al crear la cuenta';
         
-        if (!companyDoc.exists()) {
-            throw new Error('El código de empresa no es válido');
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                errorMessage = 'Este correo electrónico ya está en uso';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'El correo electrónico no es válido';
+                break;
+            case 'auth/weak-password':
+                errorMessage = 'La contraseña es demasiado débil';
+                break;
+            default:
+                errorMessage = 'Error al crear la cuenta. Inténtalo de nuevo más tarde.';
         }
         
-        return companyCode;
-    } catch (error) {
-        throw error;
+        showMessage(errorMessage, 'error');
+    } finally {
+        isProcessing = false;
+        registerBtn.disabled = false;
+        registerBtn.textContent = 'Crear Cuenta';
     }
 }
 
-// Generar ID único para empresa
-function generateCompanyId(companyName) {
-    // Crear un ID basado en el nombre de la empresa y un timestamp
-    const timestamp = Date.now().toString(36);
-    const nameAbbr = companyName
-        .replace(/\s+/g, '')
-        .substring(0, 3)
-        .toLowerCase();
+// Manejar recuperación de contraseña
+async function handlePasswordReset(e) {
+    e.preventDefault();
     
-    return `${nameAbbr}_${timestamp}`;
-}
-
-// Mostrar alerta
-function showAlert(message, type = 'info') {
-    alertMessage.textContent = message;
-    authAlert.className = `auth-alert ${type}`;
-    authAlert.classList.remove('hidden');
+    if (isProcessing) return;
     
-    // Ocultar automáticamente después de 5 segundos
-    setTimeout(() => {
-        hideAlert();
-    }, 5000);
-}
-
-// Ocultar alerta
-function hideAlert() {
-    authAlert.classList.add('hidden');
-}
-
-// Mostrar/ocultar estado de carga
-function showLoading(show) {
-    const buttons = document.querySelectorAll('button[type="submit"]');
+    const email = document.getElementById('resetEmail').value;
     
-    buttons.forEach(button => {
-        if (show) {
-            button.disabled = true;
-            button.textContent = 'Procesando...';
-        } else {
-            button.disabled = false;
-            button.textContent = button === loginForm.querySelector('button') ? 'Ingresar' : 'Registrarse';
+    if (!email) {
+        showMessage('Por favor, ingresa tu correo electrónico', 'error');
+        return;
+    }
+    
+    isProcessing = true;
+    resetBtn.disabled = true;
+    resetBtn.textContent = 'Enviando...';
+    
+    try {
+        await sendPasswordResetEmail(auth, email);
+        showMessage('Se ha enviado un enlace de recuperación a tu correo electrónico', 'success');
+        
+        // Volver al formulario de login después de un breve delay
+        setTimeout(() => {
+            showForm(loginForm);
+            hideForms([registerForm, resetPasswordForm]);
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Error al enviar email de recuperación:', error);
+        let errorMessage = 'Error al enviar el email de recuperación';
+        
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'El correo electrónico no es válido';
+                break;
+            case 'auth/user-not-found':
+                errorMessage = 'No existe una cuenta con este correo electrónico';
+                break;
+            default:
+                errorMessage = 'Error al enviar el email de recuperación. Inténtalo de nuevo más tarde.';
         }
-    });
+        
+        showMessage(errorMessage, 'error');
+    } finally {
+        isProcessing = false;
+        resetBtn.disabled = false;
+        resetBtn.textContent = 'Enviar enlace de recuperación';
+    }
 }
 
-// Obtener mensaje de error legible para el usuario
-function getAuthErrorMessage(errorCode) {
-    const errorMessages = {
-        'auth/invalid-email': 'El correo electrónico no tiene un formato válido',
-        'auth/user-disabled': 'Esta cuenta ha sido deshabilitada',
-        'auth/user-not-found': 'No existe una cuenta con este correo electrónico',
-        'auth/wrong-password': 'La contraseña es incorrecta',
-        'auth/email-already-in-use': 'Este correo electrónico ya está en uso',
-        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
-        'auth/operation-not-allowed': 'La operación no está permitida',
-        'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde'
-    };
+// Utilidades de UI
+function showForm(form) {
+    form.classList.remove('hidden');
+}
+
+function hideForms(forms) {
+    forms.forEach(form => form.classList.add('hidden'));
+}
+
+function togglePasswordVisibility(inputId, button) {
+    const passwordInput = document.getElementById(inputId);
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
     
-    return errorMessages[errorCode] || 'Ocurrió un error inesperado';
+    // Cambiar el emoji del botón
+    button.textContent = type === 'password' ? '👁️' : '🔒';
 }
 
-// Exportar funciones para uso en otros módulos
-window.authModule = {
-    getCurrentUser: () => currentUser,
-    logoutUser: window.logoutUser
-
-};
+// Inicializar la aplicación cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', init);
