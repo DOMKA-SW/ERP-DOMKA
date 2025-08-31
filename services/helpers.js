@@ -11,19 +11,18 @@ export function showMessage(message, type = 'info') {
     }, 5000);
 }
 
-// Redirigir según el rol del usuario
-export async function redirectBasedOnRole(userId) {
-    try {
-        const role = await getUserRole(userId);
+// Función simplificada para mostrar mensajes (ya existente)
+export function showMessage(message, type = 'info') {
+    const messageEl = document.getElementById('authMessage');
+    if (messageEl) {
+        messageEl.textContent = message;
+        messageEl.classList.remove('hidden', 'success', 'error');
+        messageEl.classList.add(type);
         
-        if (role === 'superadmin') {
-            window.location.href = '/modules/superadmin/';
-        } else {
-            window.location.href = '/modules/dashboard/';
-        }
-    } catch (error) {
-        console.error('Error al redirigir usuario:', error);
-        showMessage('Error al cargar tu perfil. Inténtalo de nuevo.', 'error');
+        // Ocultar el mensaje después de 5 segundos
+        setTimeout(() => {
+            messageEl.classList.add('hidden');
+        }, 5000);
     }
 }
 
