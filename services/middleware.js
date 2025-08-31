@@ -1,6 +1,7 @@
 // services/middleware.js - Middleware para verificación de permisos
 
 import { hasPermission } from './permissions.js';
+import { showNotification } from './helpers.js';
 
 // Verificar permisos antes de cargar un módulo
 export async function checkModulePermission(moduleName) {
