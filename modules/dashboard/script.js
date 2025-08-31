@@ -520,6 +520,151 @@ function loadNavigation() {
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
 
+// Importar sistema de permisos
+import { hasPermission, filterNavigationByRole } from '../../services/permissions.js';
+
+// Navegación con identificación de módulos
+const navigationItems = [
+    { module: "clientes", icon: "👥", text: "Clientes" },
+    { module: "cotizaciones", icon: "📋", text: "Cotizaciones" },
+    { module: "inventario", icon: "📦", text: "Inventario" },
+    { module: "contabilidad", icon: "📒", text: "Contabilidad" },
+    { module: "nomina", icon: "💰", text: "Nómina" },
+    { module: "pagos", icon: "💳", text: "Pagos" },
+    { module: "crm", icon: "🤝", text: "CRM" },
+    { module: "ai", icon: "🤖", text: "Asistente AI" }
+];
+
+// En la función loadUserData, después de cargar los datos del usuario:
+async function loadUserData(userId) {
+    try {
+        const userData = await getUserData(userId);
+        
+        // Actualizar UI con datos del usuario
+        userNameElement.textContent = userData.name;
+        userRoleElement.textContent = userData.role;
+        userAvatarElement.querySelector('span').textContent = userData.name.charAt(0).toUpperCase();
+        
+        // Personalizar mensaje de bienvenida
+        if (userData.role === 'superadmin') {
+            welcomeTitleElement.textContent = `Panel de Control Global`;
+            welcomeMessageElement.textContent = `Gestión de todas las empresas del sistema`;
+        } else if (userData.company) {
+            welcomeTitleElement.textContent = `Bienvenido, ${userData.name}`;
+            welcomeMessageElement.textContent = `Panel de ${userData.company.name}`;
+        }
+        
+        // Filtrar y cargar navegación según permisos
+        loadNavigation(userData);
+        
+    } catch (error) {
+        console.error('Error al cargar datos del usuario:', error);
+        showNotification('Error al cargar datos del usuario', 'error');
+    }
+}
+
+// Cargar navegación según permisos
+function loadNavigation(user) {
+    const navContainer = document.getElementById('sidebar-nav');
+    const filteredNav = filterNavigationByRole(navigationItems, user);
+    
+    let navHTML = '';
+    
+    // Sección Principal
+    navHTML += `
+        <div class="nav-section">
+            <h3>Principal</h3>
+            <ul>
+                <li class="nav-item active">
+                    <a href="#" data-module="dashboard">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    `;
+    
+    // Sección de Gestión (solo si tiene al menos un módulo)
+    if (filteredNav.length > 0) {
+        navHTML += `
+            <div class="nav-section">
+                <h3>Gestión</h3>
+                <ul>
+        `;
+        
+        filteredNav.forEach(item => {
+            navHTML += `
+                <li class="nav-item">
+                    <a href="#" data-module="${item.module}">
+                        <span class="nav-icon">${item.icon}</span>
+                        <span class="nav-text">${item.text}</span>
+                    </a>
+                </li>
+            `;
+        });
+        
+        navHTML += `
+                </ul>
+            </div>
+        `;
+    }
+    
+    // Sección de Herramientas (si tiene permisos)
+    if (hasPermission(user, 'access_module', 'crm') || 
+        hasPermission(user, 'access_module', 'ai')) {
+        
+        navHTML += `
+            <div class="nav-section">
+                <h3>Herramientas</h3>
+                <ul>
+        `;
+        
+        if (hasPermission(user, 'access_module', 'crm')) {
+            navHTML += `
+                <li class="nav-item">
+                    <a href="#" data-module="crm">
+                        <span class="nav-icon">🤝</span>
+                        <span class="nav-text">CRM</span>
+                    </a>
+                </li>
+            `;
+        }
+        
+        if (hasPermission(user, 'access_module', 'ai')) {
+            navHTML += `
+                <li class="nav-item">
+                    <a href="#" data-module="ai">
+                        <span class="nav-icon">🤖</span>
+                        <span class="nav-text">Asistente AI</span>
+                    </a>
+                </li>
+            `;
+        }
+        
+        navHTML += `
+                </ul>
+            </div>
+        `;
+    }
+    
+    navContainer.innerHTML = navHTML;
+    
+    // Agregar event listeners a los enlaces de navegación
+    document.querySelectorAll('[data-module]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const module = link.getAttribute('data-module');
+            
+            // Verificar permisos antes de navegar
+            if (module === 'dashboard' || hasPermission(user, 'access_module', module)) {
+                navigateToModule(module);
+            } else {
+                showNotification('No tienes permisos para acceder a este módulo', 'error');
+            }
+        });
+    });
+}
 
 
 
