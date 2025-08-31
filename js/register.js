@@ -1,20 +1,22 @@
-// js/register.js
 import { registerUser } from "./auth.js";
 
-document.getElementById("register-form").addEventListener("submit", async (e) => {
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-
+  const companyName = document.getElementById("companyName").value.trim();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  const companyId = document.getElementById("companyId").value || "default"; 
-  const role = "user"; // por defecto, usuario normal
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const errorMsg = document.getElementById("errorMsg");
+
+  if (password !== confirmPassword) {
+    errorMsg.textContent = "Las contraseñas no coinciden.";
+    return;
+  }
 
   try {
-    const user = await registerUser(email, password, companyId, role);
-    alert("Usuario registrado: " + user.email);
+    await registerUser(companyName, email, password);
     window.location.href = "dashboard.html";
   } catch (err) {
-    console.error("Error en registro:", err);
-    alert("Error: " + err.message);
+    errorMsg.textContent = err.message;
   }
 });
