@@ -3,7 +3,7 @@ import {
     auth, 
     signOut, 
     onAuthStateChanged 
-} from '../../services/firebase-config.js';
+} from '../../services/auth.js'; // Cambiado a auth.js
 import { 
     getUserData, 
     getCompanyData, 
@@ -519,6 +519,7 @@ function loadNavigation() {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
