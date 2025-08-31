@@ -88,20 +88,28 @@ function setupEventListeners() {
         showModal(addTaskModal);
     });
     
-    // Cerrar modales
+    // Cerrar modales - Corrección aplicada aquí
     closeQuoteModal.addEventListener('click', () => hideModal(quickQuoteModal));
     cancelQuote.addEventListener('click', () => hideModal(quickQuoteModal));
     closeTaskModal.addEventListener('click', () => hideModal(addTaskModal));
     cancelTask.addEventListener('click', () => hideModal(addTaskModal));
     
-    // Envío de formularios
+    // Envío de formularios - Corrección aplicada aquí
     quickQuoteForm.addEventListener('submit', handleQuickQuote);
-    addTaskForm.addEventListener('click', handleAddTask);
+    addTaskForm.addEventListener('submit', handleAddTask); // Cambiado de 'click' a 'submit'
     
     // Cerrar modales al hacer clic fuera
     document.addEventListener('click', (e) => {
         if (e.target === quickQuoteModal) hideModal(quickQuoteModal);
         if (e.target === addTaskModal) hideModal(addTaskModal);
+    });
+
+    // Cerrar modales con la tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideModal(quickQuoteModal);
+            hideModal(addTaskModal);
+        }
     });
 }
 
@@ -389,7 +397,7 @@ async function handleQuickQuote(e) {
     }
 }
 
-// Manejar agregar tarea
+// Manejar agregar tarea - Versión corregida
 async function handleAddTask(e) {
     e.preventDefault();
     
@@ -409,6 +417,17 @@ async function handleAddTask(e) {
             createdAt: new Date(),
             userId: currentUser.uid
         };
+        
+        // Validaciones
+        if (!taskData.title || !taskData.dueDate) {
+            showNotification('Por favor, completa todos los campos obligatorios', 'error');
+            return;
+        }
+        
+        if (new Date(taskData.dueDate) < new Date().setHours(0, 0, 0, 0)) {
+            showNotification('La fecha límite no puede ser en el pasado', 'error');
+            return;
+        }
         
         await createTask(taskData);
         
@@ -468,15 +487,21 @@ function toggleSidebar() {
     sidebar.classList.toggle('open');
 }
 
-// Mostrar modal
+// Mostrar modal - Versión mejorada
 function showModal(modal) {
     modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.add('open');
+    }, 10);
     document.body.style.overflow = 'hidden';
 }
 
-// Ocultar modal
+// Ocultar modal - Versión mejorada
 function hideModal(modal) {
-    modal.classList.add('hidden');
+    modal.classList.remove('open');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
     document.body.style.overflow = 'auto';
 }
 
@@ -493,3 +518,4 @@ function loadNavigation() {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
