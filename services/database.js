@@ -48,11 +48,11 @@ export async function getUserRole(userId) {
             return docSnap.data().role;
         } else {
             console.log("No such document!");
-            return null;
+            return 'user'; // Rol por defecto
         }
     } catch (e) {
         console.error("Error getting document: ", e);
-        throw e;
+        return 'user'; // Rol por defecto en caso de error
     }
 }
 
