@@ -191,7 +191,28 @@ async function handleRegister(e) {
         });
         
         showMessage('Cuenta creada exitosamente. Redirigiendo...', 'success');
-        
+
+        // En la función handleRegister, después de crear el usuario:
+const companyId = await createCompany({
+    name: companyName,
+    plan: "free", // Plan inicial gratuito
+    modules: { // Módulos básicos habilitados por defecto
+        clientes: true,
+        cotizaciones: true,
+        inventario: true,
+        contabilidad: false,
+        nomina: false,
+        pagos: false,
+        crm: false,
+        ai: false
+    }
+}, user.uid);
+
+// Asignar el usuario como admin de la empresa
+await updateDoc(doc(db, "users", user.uid), {
+    companyId: companyId,
+    role: "admin"
+});
         // Redirigir al dashboard después de un breve delay
         setTimeout(() => {
             redirectBasedOnRole(user.uid);
@@ -221,6 +242,7 @@ async function handleRegister(e) {
         registerBtn.disabled = false;
         registerBtn.textContent = 'Crear Cuenta';
     }
+    
 }
 
 // Manejar recuperación de contraseña
@@ -293,6 +315,7 @@ function togglePasswordVisibility(inputId, button) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
