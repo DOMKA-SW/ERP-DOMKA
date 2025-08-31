@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro | DOMKA ERP</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Crear Empresa en DOMKA ERP</h2>
+    <form id="registerForm">
+      <input type="text" id="companyName" placeholder="Nombre de la Empresa" required>
+      <input type="email" id="email" placeholder="Correo Admin" required>
+      <input type="password" id="password" placeholder="Contraseña" required>
+      <input type="password" id="confirmPassword" placeholder="Confirmar Contraseña" required>
+      <button type="submit">Registrar</button>
+    </form>
+    <p id="errorMsg"></p>
+  </div>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>
