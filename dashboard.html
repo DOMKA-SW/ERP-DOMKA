@@ -3,48 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - DOMKA ERP</title>
+  <title>DOMKA ERP - Dashboard</title>
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/dashboard.js"></script>
+  <link rel="icon" href="/assets/logo.png" type="image/png">
 </head>
-<body class="dashboard-page">
+<body>
   <div class="dashboard-layout">
     
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <img src="assets/logo.png" alt="DOMKA Logo">
+        <img src="/assets/logo.png" alt="DOMKA ERP Logo" class="sidebar-logo">
         <h2>DOMKA ERP</h2>
+        <p id="company-name">Empresa</p>
       </div>
       <nav class="sidebar-nav">
-        <a href="#" class="active">🏠 Inicio</a>
-        <a href="#">👥 Clientes</a>
-        <a href="#">📋 Cotizaciones</a>
-        <a href="#">📦 Inventario</a>
-        <a href="#">📒 Contabilidad</a>
-        <a href="#">⚙️ Configuración</a>
+        <a href="#" class="active" data-module="home">🏠 Inicio</a>
+        <a href="#" data-module="clientes">👥 Clientes</a>
+        <a href="#" data-module="cotizaciones">📋 Cotizaciones</a>
+        <a href="#" data-module="inventario">📦 Inventario</a>
+        <a href="#" data-module="contabilidad">📒 Contabilidad</a>
+        <a href="#" data-module="configuracion">⚙️ Configuración</a>
       </nav>
       <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
     </aside>
 
-    <!-- Main content -->
+    <!-- Main Content -->
     <main class="main-content">
       <!-- Topbar -->
       <header class="topbar">
         <h1 id="welcome-text">Bienvenido</h1>
       </header>
 
-      <!-- Dashboard content -->
-      <section class="content">
+      <!-- Contenedor donde se cargan módulos -->
+      <section id="module-container" class="content">
         <h2>Panel Principal</h2>
-        <p>Aquí verás los módulos de tu empresa <span id="company-name">...</span>.</p>
-        <div class="widgets-grid">
-          <div class="widget-card">📊 Resumen de ventas</div>
-          <div class="widget-card">🛒 Órdenes recientes</div>
-          <div class="widget-card">⚠️ Alertas de inventario</div>
-        </div>
+        <p>Selecciona un módulo en el menú lateral para comenzar.</p>
       </section>
     </main>
+
   </div>
 </body>
 </html>
