@@ -498,3 +498,64 @@ export async function redirectUserBasedOnRole(userId) {
         }, 3000);
     }
 }
+
+// Obtener clientes de una empresa específica
+export async function getClientsByCompany(companyId) {
+    try {
+        const q = query(
+            collection(db, "clients"),
+            where("companyId", "==", companyId)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const clients = [];
+        
+        querySnapshot.forEach((doc) => {
+            clients.push({ id: doc.id, ...doc.data() });
+        });
+        
+        return clients;
+    } catch (e) {
+        console.error("Error getting clients: ", e);
+        throw e;
+    }
+}
+
+// Obtener cotizaciones de una empresa específica
+export async function getQuotesByCompany(companyId) {
+    try {
+        const q = query(
+            collection(db, "quotes"),
+            where("companyId", "==", companyId)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const quotes = [];
+        
+        querySnapshot.forEach((doc) => {
+            quotes.push({ id: doc.id, ...doc.data() });
+        });
+        
+        return quotes;
+    } catch (e) {
+        console.error("Error getting quotes: ", e);
+        throw e;
+    }
+}
+
+// Crear documento con companyId automáticamente
+export async function createDocument(collectionName, data, user) {
+    try {
+        // Si el usuario pertenece a una empresa, agregar companyId automáticamente
+        const documentData = user.companyId 
+            ? { ...data, companyId: user.companyId, createdAt: new Date() }
+            : { ...data, createdAt: new Date() };
+        
+        const docRef = await addDoc(collection(db, collectionName), documentData);
+        console.log("Document created with ID: ", docRef.id);
+        return docRef.id;
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        throw e;
+    }
+}
