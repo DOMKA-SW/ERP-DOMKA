@@ -1,59 +1,108 @@
-// dashboard.js - Módulo Dashboard para DOMKA ERP
-
-// Importaciones de Firebase (versión modular)
+// Importar servicios y configuraciones
 import { 
-    getAuth, 
-    onAuthStateChanged, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    auth, 
+    signOut, 
+    onAuthStateChanged 
+} from '../../services/firebase-config.js';
 import { 
-    getFirestore, 
-    collection, 
-    query, 
-    where, 
-    getDocs,
-    getCountFromServer,
-    orderBy,
-    startAt,
-    endAt,
-    Timestamp
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    getUserData, 
+    getCompanyData, 
+    getDashboardMetrics,
+    getRecentQuotes,
+    getRecentActivity,
+    getUserTasks,
+    createQuickQuote,
+    createTask 
+} from '../../services/database.js';
+import { showNotification, formatCurrency, formatDate } from '../../services/helpers.js';
 
-// Inicializar Firebase (ya inicializada en auth, pero la necesitamos aquí)
-import { app } from "../modules/auth/auth.js";
+// Elementos del DOM
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const userNameElement = document.getElementById('userName');
+const userRoleElement = document.getElementById('userRole');
+const userAvatarElement = document.getElementById('userAvatar');
+const welcomeTitleElement = document.getElementById('welcomeTitle');
+const welcomeMessageElement = document.getElementById('welcomeMessage');
+const logoutBtn = document.getElementById('logoutBtn');
+const quickActionBtn = document.getElementById('quickActionBtn');
 
-// Inicializar servicios de Firebase
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Elementos de métricas
+const clientsCountElement = document.getElementById('clientsCount');
+const quotesCountElement = document.getElementById('quotesCount');
+const inventoryItemsElement = document.getElementById('inventoryItems');
+const revenueAmountElement = document.getElementById('revenueAmount');
+
+// Elementos de gráficos y listas
+const recentQuotesList = document.getElementById('recentQuotes');
+const taskList = document.getElementById('taskList');
+const activityFeed = document.getElementById('activityFeed');
+
+// Modales
+const quickQuoteModal = document.getElementById('quickQuoteModal');
+const addTaskModal = document.getElementById('addTaskModal');
+const closeQuoteModal = document.getElementById('closeQuoteModal');
+const cancelQuote = document.getElementById('cancelQuote');
+const closeTaskModal = document.getElementById('closeTaskModal');
+const cancelTask = document.getElementById('cancelTask');
+const addTaskBtn = document.getElementById('addTaskBtn');
+
+// Formularios
+const quickQuoteForm = document.getElementById('quickQuoteForm');
+const addTaskForm = document.getElementById('addTaskForm');
 
 // Variables globales
-let currentUser = null;
-let empresaId = null;
 let revenueChart = null;
+let currentUser = null;
+let currentCompany = null;
 
-// Inicializar el dashboard cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', initDashboard);
-
-// Inicialización del dashboard
-function initDashboard() {
-    checkAuthState();
+// Inicializar la aplicación
+function init() {
     setupEventListeners();
+    checkAuthState();
+    loadNavigation();
 }
 
 // Configurar event listeners
 function setupEventListeners() {
-    // Botón para nueva cotización
-    document.getElementById('new-quote-btn').addEventListener('click', () => {
-        window.location.href = '../cotizaciones/cotizaciones.html';
+    // Navegación
+    sidebarToggle.addEventListener('click', toggleSidebar);
+    logoutBtn.addEventListener('click', handleLogout);
+    
+    // Navegación entre módulos
+    document.querySelectorAll('[data-module]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const module = link.getAttribute('data-module');
+            navigateToModule(module);
+        });
     });
     
-    // Event listener para el logout (se configura después de cargar el header)
-    setTimeout(() => {
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', logoutUser);
-        }
-    }, 500);
+    // Acciones rápidas
+    quickActionBtn.addEventListener('click', () => {
+        showModal(quickQuoteModal);
+        loadClientsForQuote();
+    });
+    
+    addTaskBtn.addEventListener('click', () => {
+        showModal(addTaskModal);
+    });
+    
+    // Cerrar modales
+    closeQuoteModal.addEventListener('click', () => hideModal(quickQuoteModal));
+    cancelQuote.addEventListener('click', () => hideModal(quickQuoteModal));
+    closeTaskModal.addEventListener('click', () => hideModal(addTaskModal));
+    cancelTask.addEventListener('click', () => hideModal(addTaskModal));
+    
+    // Envío de formularios
+    quickQuoteForm.addEventListener('submit', handleQuickQuote);
+    addTaskForm.addEventListener('click', handleAddTask);
+    
+    // Cerrar modales al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (e.target === quickQuoteModal) hideModal(quickQuoteModal);
+        if (e.target === addTaskModal) hideModal(addTaskModal);
+    });
 }
 
 // Verificar estado de autenticación
@@ -61,204 +110,177 @@ function checkAuthState() {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
-            // Obtener información adicional del usuario desde Firestore
             await loadUserData(user.uid);
-            // Cargar métricas del dashboard
-            await loadDashboardMetrics();
-            // Cargar gráfica de ingresos
-            await loadRevenueChart();
+            await loadCompanyData();
+            await loadDashboardData();
         } else {
             // Usuario no autenticado, redirigir al login
-            window.location.href = '../auth/auth.html';
+            window.location.href = '/modules/auth/';
         }
     });
 }
 
-// Cargar datos del usuario desde Firestore
+// Cargar datos del usuario
 async function loadUserData(userId) {
     try {
-        // En una implementación real, obtendríamos los datos del usuario desde Firestore
-        // Por ahora, usamos sessionStorage para obtener el empresa_id
-        empresaId = sessionStorage.getItem('empresa_id');
+        const userData = await getUserData(userId);
         
-        if (!empresaId) {
-            // Si no está en sessionStorage, obtener de Firestore
-            const userDoc = await getDoc(doc(db, "usuarios", userId));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                empresaId = userData.empresa_id;
-                sessionStorage.setItem('empresa_id', empresaId);
-                sessionStorage.setItem('user_role', userData.rol || 'usuario');
-            }
-        }
+        // Actualizar UI con datos del usuario
+        userNameElement.textContent = userData.name;
+        userRoleElement.textContent = userData.role;
+        userAvatarElement.querySelector('span').textContent = userData.name.charAt(0).toUpperCase();
         
-        // Actualizar el header con el nombre de la empresa
-        updateHeaderCompanyName();
+        // Personalizar mensaje de bienvenida
+        welcomeTitleElement.textContent = `Bienvenido${userData.name ? `, ${userData.name}` : ''}`;
+        
     } catch (error) {
         console.error('Error al cargar datos del usuario:', error);
-        showError('Error al cargar información del usuario');
+        showNotification('Error al cargar datos del usuario', 'error');
     }
 }
 
-// Actualizar el header con el nombre de la empresa
-async function updateHeaderCompanyName() {
+// Cargar datos de la empresa
+async function loadCompanyData() {
     try {
-        if (!empresaId) return;
+        if (!currentUser) return;
         
-        // Obtener nombre de la empresa desde Firestore
-        const empresaDoc = await getDoc(doc(db, "empresas", empresaId));
-        if (empresaDoc.exists()) {
-            const empresaData = empresaDoc.data();
-            const companyNameElement = document.getElementById('company-name');
-            if (companyNameElement) {
-                companyNameElement.textContent = empresaData.nombre;
-            }
+        const userData = await getUserData(currentUser.uid);
+        if (userData.companyId) {
+            currentCompany = await getCompanyData(userData.companyId);
+            welcomeMessageElement.textContent = `Resumen de ${currentCompany.name}`;
         }
     } catch (error) {
-        console.error('Error al obtener nombre de empresa:', error);
+        console.error('Error al cargar datos de la empresa:', error);
     }
 }
 
-// Cargar métricas del dashboard
-async function loadDashboardMetrics() {
-    if (!empresaId) return;
+// Cargar datos del dashboard
+async function loadDashboardData() {
+    try {
+        if (!currentUser) return;
+        
+        const userData = await getUserData(currentUser.uid);
+        if (!userData.companyId) return;
+        
+        // Cargar métricas
+        const metrics = await getDashboardMetrics(userData.companyId);
+        updateMetrics(metrics);
+        
+        // Cargar cotizaciones recientes
+        const quotes = await getRecentQuotes(userData.companyId);
+        displayRecentQuotes(quotes);
+        
+        // Cargar tareas
+        const tasks = await getUserTasks(currentUser.uid);
+        displayTasks(tasks);
+        
+        // Cargar actividad reciente
+        const activity = await getRecentActivity(userData.companyId);
+        displayRecentActivity(activity);
+        
+        // Inicializar gráfico
+        initRevenueChart(metrics.revenueData);
+        
+    } catch (error) {
+        console.error('Error al cargar datos del dashboard:', error);
+        showNotification('Error al cargar datos del dashboard', 'error');
+    }
+}
+
+// Actualizar métricas en la UI
+function updateMetrics(metrics) {
+    clientsCountElement.textContent = metrics.clientsCount || 0;
+    quotesCountElement.textContent = metrics.quotesCount || 0;
+    inventoryItemsElement.textContent = metrics.inventoryItems || 0;
+    revenueAmountElement.textContent = formatCurrency(metrics.revenueAmount || 0);
+}
+
+// Mostrar cotizaciones recientes
+function displayRecentQuotes(quotes) {
+    if (!quotes || quotes.length === 0) {
+        recentQuotesList.innerHTML = '<div class="empty-state"><p>No hay cotizaciones recientes</p></div>';
+        return;
+    }
     
-    try {
-        // Obtener total de clientes
-        const clientsCount = await getCollectionCount('clientes');
-        document.getElementById('total-clients').textContent = clientsCount;
-        
-        // Obtener total de cotizaciones
-        const quotesCount = await getCollectionCount('cotizaciones');
-        document.getElementById('total-quotes').textContent = quotesCount;
-        
-        // Obtener total de cuentas de cobro
-        const accountsCount = await getCollectionCount('cuentas');
-        document.getElementById('total-accounts').textContent = accountsCount;
-        
-        // Obtener estado de inventario
-        await loadInventoryStatus();
-    } catch (error) {
-        console.error('Error al cargar métricas:', error);
-        showError('Error al cargar las métricas del dashboard');
-    }
-}
-
-// Obtener el conteo de documentos en una colección filtrado por empresa_id
-async function getCollectionCount(collectionName) {
-    try {
-        const q = query(
-            collection(db, collectionName), 
-            where("empresa_id", "==", empresaId)
-        );
-        const snapshot = await getCountFromServer(q);
-        return snapshot.data().count;
-    } catch (error) {
-        console.error(`Error al contar documentos en ${collectionName}:`, error);
-        return 0;
-    }
-}
-
-// Cargar estado del inventario
-async function loadInventoryStatus() {
-    try {
-        const q = query(
-            collection(db, "inventario"), 
-            where("empresa_id", "==", empresaId)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const totalProducts = querySnapshot.size;
-        
-        // Calcular productos con stock bajo (menos de 10 unidades)
-        let lowStockCount = 0;
-        querySnapshot.forEach(doc => {
-            const product = doc.data();
-            if (product.stock !== undefined && product.stock < 10) {
-                lowStockCount++;
-            }
-        });
-        
-        // Actualizar UI
-        const inventoryElement = document.getElementById('inventory-status');
-        if (inventoryElement) {
-            inventoryElement.textContent = `${totalProducts} productos`;
-            
-            // Mostrar advertencia si hay productos con stock bajo
-            if (lowStockCount > 0) {
-                inventoryElement.innerHTML += `<br><small style="color: var(--warning-color);">${lowStockCount} con stock bajo</small>`;
-            }
-        }
-    } catch (error) {
-        console.error('Error al cargar estado de inventario:', error);
-        document.getElementById('inventory-status').textContent = "Error al cargar";
-    }
-}
-
-// Cargar gráfica de ingresos
-async function loadRevenueChart() {
-    try {
-        // Obtener fecha de hace 30 días
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        // Consultar cuentas de los últimos 30 días
-        const q = query(
-            collection(db, "cuentas"), 
-            where("empresa_id", "==", empresaId),
-            where("fecha_creacion", ">=", Timestamp.fromDate(thirtyDaysAgo)),
-            where("estado", "==", "pagada"), // Solo cuentas pagadas
-            orderBy("fecha_creacion")
-        );
-        
-        const querySnapshot = await getDocs(q);
-        
-        // Preparar datos para la gráfica
-        const revenueByDay = {};
-        const dates = [];
-        
-        // Inicializar los últimos 30 días
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
-            revenueByDay[dateStr] = 0;
-            dates.push(dateStr);
-        }
-        
-        // Procesar cuentas pagadas
-        querySnapshot.forEach(doc => {
-            const cuenta = doc.data();
-            if (cuenta.monto && cuenta.fecha_creacion) {
-                const dateStr = cuenta.fecha_creacion.toDate().toISOString().split('T')[0];
-                if (revenueByDay[dateStr] !== undefined) {
-                    revenueByDay[dateStr] += cuenta.monto;
-                }
-            }
-        });
-        
-        // Crear arrays para la gráfica
-        const labels = dates.map(date => {
-            const d = new Date(date);
-            return `${d.getDate()}/${d.getMonth() + 1}`;
-        });
-        
-        const data = dates.map(date => revenueByDay[date]);
-        
-        // Renderizar gráfica
-        renderRevenueChart(labels, data);
-    } catch (error) {
-        console.error('Error al cargar datos para gráfica de ingresos:', error);
-        // Renderizar gráfica vacía en caso de error
-        renderRevenueChart([], []);
-    }
-}
-
-// Renderizar gráfica de ingresos con Chart.js
-function renderRevenueChart(labels, data) {
-    const ctx = document.getElementById('revenue-chart').getContext('2d');
+    const quotesHTML = quotes.map(quote => `
+        <div class="recent-item">
+            <div class="recent-info">
+                <h4>${quote.clientName}</h4>
+                <p>${quote.description}</p>
+            </div>
+            <div class="recent-amount">${formatCurrency(quote.amount)}</div>
+        </div>
+    `).join('');
     
-    // Destruir gráfica existente si hay una
+    recentQuotesList.innerHTML = quotesHTML;
+}
+
+// Mostrar tareas
+function displayTasks(tasks) {
+    if (!tasks || tasks.length === 0) {
+        taskList.innerHTML = '<div class="empty-state"><p>No hay tareas pendientes</p></div>';
+        return;
+    }
+    
+    const tasksHTML = tasks.map(task => `
+        <div class="task-item">
+            <div class="task-checkbox ${task.completed ? 'checked' : ''}" data-task-id="${task.id}">
+                ${task.completed ? '✓' : ''}
+            </div>
+            <div class="task-info">
+                <h4>${task.title}</h4>
+                <p>Vence: ${formatDate(task.dueDate)}</p>
+            </div>
+            <span class="task-priority ${task.priority}">${task.priority}</span>
+        </div>
+    `).join('');
+    
+    taskList.innerHTML = tasksHTML;
+    
+    // Agregar event listeners para checkboxes
+    document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('click', toggleTaskCompletion);
+    });
+}
+
+// Mostrar actividad reciente
+function displayRecentActivity(activities) {
+    if (!activities || activities.length === 0) {
+        activityFeed.innerHTML = '<div class="empty-state"><p>No hay actividad reciente</p></div>';
+        return;
+    }
+    
+    const activityHTML = activities.map(activity => `
+        <div class="activity-item">
+            <div class="activity-icon">${getActivityIcon(activity.type)}</div>
+            <div class="activity-content">
+                <p>${activity.description}</p>
+                <span class="activity-time">${formatDate(activity.timestamp)}</span>
+            </div>
+        </div>
+    `).join('');
+    
+    activityFeed.innerHTML = activityHTML;
+}
+
+// Obtener icono según tipo de actividad
+function getActivityIcon(type) {
+    const icons = {
+        quote: '📋',
+        client: '👥',
+        payment: '💳',
+        task: '✅',
+        system: '⚙️'
+    };
+    
+    return icons[type] || '🔔';
+}
+
+// Inicializar gráfico de ingresos
+function initRevenueChart(data) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    // Destruir gráfico existente si hay uno
     if (revenueChart) {
         revenueChart.destroy();
     }
@@ -266,38 +288,35 @@ function renderRevenueChart(labels, data) {
     revenueChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: data.labels || ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
             datasets: [{
-                label: 'Ingresos diarios',
-                data: data,
-                backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                borderColor: 'rgba(67, 97, 238, 1)',
+                label: 'Ingresos',
+                data: data.values || [0, 0, 0, 0, 0, 0],
+                borderColor: '#F27C22',
+                backgroundColor: 'rgba(242, 124, 34, 0.1)',
                 borderWidth: 2,
-                tension: 0.3,
-                fill: true
+                fill: true,
+                tension: 0.3
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Ingresos: $${context.raw.toFixed(2)}`;
-                        }
-                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
-                        }
+                    grid: {
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
                     }
                 }
             }
@@ -305,51 +324,172 @@ function renderRevenueChart(labels, data) {
     });
 }
 
-// Función para cerrar sesión
-async function logoutUser() {
+// Cargar clientes para cotización rápida
+async function loadClientsForQuote() {
+    try {
+        // En una implementación real, esto cargaría clientes desde Firestore
+        const quoteClientSelect = document.getElementById('quoteClient');
+        quoteClientSelect.innerHTML = '<option value="">Seleccionar cliente</option>';
+        
+        // Simulación de carga de clientes
+        const clients = [
+            { id: '1', name: 'Constructora Andina S.A.' },
+            { id: '2', name: 'Inmobiliaria Pacifico' },
+            { id: '3', name: 'Edificaciones Modernas' }
+        ];
+        
+        clients.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = client.name;
+            quoteClientSelect.appendChild(option);
+        });
+        
+    } catch (error) {
+        console.error('Error al cargar clientes:', error);
+        showNotification('Error al cargar la lista de clientes', 'error');
+    }
+}
+
+// Manejar cotización rápida
+async function handleQuickQuote(e) {
+    e.preventDefault();
+    
+    const submitBtn = quickQuoteForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creando...';
+        
+        const formData = new FormData(quickQuoteForm);
+        const quoteData = {
+            clientId: formData.get('quoteClient'),
+            description: formData.get('quoteDescription'),
+            amount: parseFloat(formData.get('quoteAmount')),
+            validUntil: formData.get('quoteValidUntil'),
+            createdAt: new Date()
+        };
+        
+        await createQuickQuote(currentUser.uid, currentCompany.id, quoteData);
+        
+        showNotification('Cotización creada exitosamente', 'success');
+        hideModal(quickQuoteModal);
+        quickQuoteForm.reset();
+        
+        // Recargar datos del dashboard
+        await loadDashboardData();
+        
+    } catch (error) {
+        console.error('Error al crear cotización:', error);
+        showNotification('Error al crear la cotización', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// Manejar agregar tarea
+async function handleAddTask(e) {
+    e.preventDefault();
+    
+    const submitBtn = addTaskForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Agregando...';
+        
+        const formData = new FormData(addTaskForm);
+        const taskData = {
+            title: formData.get('taskTitle'),
+            dueDate: formData.get('taskDueDate'),
+            priority: formData.get('taskPriority'),
+            completed: false,
+            createdAt: new Date(),
+            userId: currentUser.uid
+        };
+        
+        await createTask(taskData);
+        
+        showNotification('Tarea agregada exitosamente', 'success');
+        hideModal(addTaskModal);
+        addTaskForm.reset();
+        
+        // Recargar tareas
+        const tasks = await getUserTasks(currentUser.uid);
+        displayTasks(tasks);
+        
+    } catch (error) {
+        console.error('Error al agregar tarea:', error);
+        showNotification('Error al agregar la tarea', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// Alternar estado de completitud de tarea
+async function toggleTaskCompletion(e) {
+    const checkbox = e.currentTarget;
+    const taskId = checkbox.getAttribute('data-task-id');
+    const isCompleted = checkbox.classList.contains('checked');
+    
+    try {
+        // En una implementación real, esto actualizaría el estado en Firestore
+        checkbox.classList.toggle('checked');
+        checkbox.innerHTML = isCompleted ? '' : '✓';
+        
+        showNotification(`Tarea ${isCompleted ? 'reactivada' : 'completada'}`, 'success');
+        
+    } catch (error) {
+        console.error('Error al actualizar tarea:', error);
+        showNotification('Error al actualizar la tarea', 'error');
+        
+        // Revertir visualmente si hay error
+        checkbox.classList.toggle('checked');
+        checkbox.innerHTML = isCompleted ? '✓' : '';
+    }
+}
+
+// Manejar cierre de sesión
+async function handleLogout() {
     try {
         await signOut(auth);
-        // Limpiar sessionStorage
-        sessionStorage.removeItem('empresa_id');
-        sessionStorage.removeItem('user_role');
-        // Redirigir a auth
-        window.location.href = '../auth/auth.html';
+        window.location.href = '/modules/auth/';
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
-        showError('Error al cerrar sesión');
+        showNotification('Error al cerrar sesión', 'error');
     }
 }
 
-// Mostrar mensaje de error
-function showError(message) {
-    // Crear elemento de error si no existe
-    let errorElement = document.getElementById('dashboard-error');
-    if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.id = 'dashboard-error';
-        errorElement.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background-color: var(--danger-color);
-            color: white;
-            border-radius: var(--border-radius);
-            z-index: 1000;
-            box-shadow: var(--box-shadow);
-        `;
-        document.body.appendChild(errorElement);
-    }
-    
-    errorElement.textContent = message;
-    
-    // Ocultar después de 5 segundos
-    setTimeout(() => {
-        errorElement.style.display = 'none';
-    }, 5000);
+// Alternar visibilidad del sidebar
+function toggleSidebar() {
+    sidebar.classList.toggle('open');
 }
 
-// Exportar funciones para uso en otros módulos
-window.dashboardModule = {
-    logoutUser: logoutUser
-};
+// Mostrar modal
+function showModal(modal) {
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// Ocultar modal
+function hideModal(modal) {
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Navegar a módulo
+function navigateToModule(module) {
+    window.location.href = `/modules/${module}/`;
+}
+
+// Cargar navegación según permisos
+function loadNavigation() {
+    // En una implementación real, esto ocultaría elementos según el rol del usuario
+    // Por ahora es solo un esqueleto para la funcionalidad
+}
+
+// Inicializar la aplicación cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', init);
