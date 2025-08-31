@@ -68,7 +68,7 @@ function setupEventListeners() {
 
 // Redirigir a la página de autenticación
 function redirectToAuth(mode = 'login') {
-    const authUrl = './modules/auth/auth.html';
+    const authUrl = './modules/auth/index.html';
     
     if (mode === 'register') {
         // Almacenar el modo de registro en sessionStorage
@@ -85,7 +85,7 @@ function checkAuthState() {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // Usuario autenticado, redirigir al dashboard
-            window.location.href = './modules/dashboard/dashboard.html';
+            window.location.href = './modules/dashboard/index.html';
         }
         // Si no hay usuario autenticado, permanecer en la página principal
     });
