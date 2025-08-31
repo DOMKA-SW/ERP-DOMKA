@@ -1,3 +1,4 @@
+// auth.js
 import { auth, db } from "./firebase.js";
 import { 
   signInWithEmailAndPassword, 
@@ -7,111 +8,66 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-/* -------------------- REGISTRO -------------------- */
-const registerForm = document.getElementById("registerForm");
-if (registerForm) {
-  registerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const companyName = document.getElementById("companyName").value.trim();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
-    const errorMsg = document.getElementById("errorMsg");
+/* -------------------- EXPORTS -------------------- */
 
-    if (password !== confirmPassword) {
-      errorMsg.textContent = "Las contraseñas no coinciden.";
-      return;
-    }
+// Registro de usuario + empresa
+export async function registerUser(companyName, email, password) {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
 
-    try {
-      // Crear usuario en Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+  const companyId = "C" + Date.now();
 
-      // Generar un companyId único (ej: timestamp)
-      const companyId = "C" + Date.now();
-
-      // Crear documento de empresa
-      await setDoc(doc(db, "companies", companyId), {
-        name: companyName,
-        createdAt: serverTimestamp(),
-        createdBy: user.uid
-      });
-
-      // Guardar usuario en colección global
-      await setDoc(doc(db, "users", user.uid), {
-        email: email,
-        companyId: companyId,
-        role: "admin",
-        createdAt: serverTimestamp()
-      });
-
-      // También en subcolección de la empresa
-      await setDoc(doc(db, "companies", companyId, "users", user.uid), {
-        email: email,
-        role: "admin",
-        createdAt: serverTimestamp()
-      });
-
-      window.location.href = "dashboard.html";
-    } catch (error) {
-      errorMsg.textContent = "Error: " + error.message;
-    }
+  await setDoc(doc(db, "companies", companyId), {
+    name: companyName,
+    createdAt: serverTimestamp(),
+    createdBy: user.uid
   });
+
+  await setDoc(doc(db, "users", user.uid), {
+    email,
+    companyId,
+    role: "admin",
+    createdAt: serverTimestamp()
+  });
+
+  await setDoc(doc(db, "companies", companyId, "users", user.uid), {
+    email,
+    role: "admin",
+    createdAt: serverTimestamp()
+  });
+
+  return user;
 }
 
-/* -------------------- LOGIN -------------------- */
-const loginForm = document.getElementById("loginForm");
-if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const companyId = document.getElementById("companyId").value;
-    const errorMsg = document.getElementById("errorMsg");
+// Login
+export async function loginUser(email, password, companyId) {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  if (!userDoc.exists()) throw new Error("Usuario no encontrado");
 
-      // Validar que el usuario pertenezca a esa empresa
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists() && userDoc.data().companyId === companyId) {
-        window.location.href = "dashboard.html";
-      } else {
-        errorMsg.textContent = "El usuario no pertenece a esta empresa.";
-        await signOut(auth);
-      }
-    } catch (error) {
-      errorMsg.textContent = "Error: " + error.message;
-    }
-  });
-}
-
-/* -------------------- DASHBOARD -------------------- */
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
+  if (userDoc.data().companyId !== companyId) {
     await signOut(auth);
-    window.location.href = "login.html";
-  });
+    throw new Error("El usuario no pertenece a esta empresa.");
+  }
+
+  return user;
 }
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const userInfo = document.getElementById("userInfo");
-    if (userInfo) {
-      const docSnap = await getDoc(doc(db, "users", user.uid));
-      if (docSnap.exists()) {
-        let data = docSnap.data();
-        userInfo.textContent = `Usuario: ${data.email} | Empresa: ${data.companyId} | Rol: ${data.role}`;
-      }
-    }
-  } else {
-    if (!window.location.href.includes("login.html") && 
-        !window.location.href.includes("register.html")) {
-      window.location.href = "login.html";
-    }
-  }
-});
+// Logout
+export async function logoutUser() {
+  await signOut(auth);
+}
 
+// Obtener info de usuario actual
+export function observeUser(callback) {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      callback(user, snap.exists() ? snap.data() : null);
+    } else {
+      callback(null, null);
+    }
+  });
+}
