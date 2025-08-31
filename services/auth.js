@@ -14,14 +14,14 @@ export async function redirectBasedOnRole(userId) {
         const role = await getUserRole(userId);
         
         if (role === 'superadmin') {
-            window.location.href = 'modules/superadmin/index.html';
+            window.location.href = '../modules/superadmin/index.html';
         } else {
-            window.location.href = 'modules/dashboard/index.html';
+            window.location.href = '../modules/dashboard/index.html';
         }
     } catch (error) {
         console.error('Error al redirigir usuario:', error);
         // Redirigir al dashboard por defecto en caso de error
-        window.location.href = 'modules/dashboard/index.html';
+        window.location.href = '../modules/dashboard/index.html';
     }
 }
 
