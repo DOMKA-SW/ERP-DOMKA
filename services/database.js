@@ -74,7 +74,6 @@ export async function getCompanyData(companyId) {
     }
 }
 
-// ... (código anterior)
 
 // Obtener datos del usuario
 export async function getUserData(userId) {
