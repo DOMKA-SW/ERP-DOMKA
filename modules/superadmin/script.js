@@ -3,7 +3,7 @@ import {
     auth, 
     signOut, 
     onAuthStateChanged 
-} from '../../services/auth.js'; // Cambiado a auth.js
+} from '../../services/auth.js';
 import { 
     getUserData,
     getAllCompanies,
@@ -137,6 +137,23 @@ function setupEventListeners() {
             hideModal(userModal);
         }
     });
+}
+
+// Cargar navegación
+function loadNavigation() {
+    // Mostrar la sección de empresas por defecto
+    showSection('companies');
+    
+    // Actualizar navegación activa
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Activar el primer elemento del menú
+    const firstNavItem = document.querySelector('.nav-item');
+    if (firstNavItem) {
+        firstNavItem.classList.add('active');
+    }
 }
 
 // Verificar estado de autenticación
@@ -688,6 +705,33 @@ function showModal(modal) {
 function hideModal(modal) {
     modal.classList.add('hidden');
     document.body.style.overflow = 'auto';
+}
+
+// Filtrar empresas (para el event listener)
+function filterCompanies() {
+    currentCompanyPage = 1; // Reiniciar a la primera página
+    displayCompanies();
+}
+
+// Filtrar usuarios (para el event listener)
+function filterUsers() {
+    currentUserPage = 1; // Reiniciar a la primera página
+    displayUsers();
+}
+
+// Manejar cierre de sesión
+async function handleLogout() {
+    try {
+        await signOut(auth);
+        showNotification('Sesión cerrada exitosamente', 'success');
+        // Redirigir al login después de un breve delay
+        setTimeout(() => {
+            window.location.href = '../../modules/auth/index.html';
+        }, 1000);
+    } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        showNotification('Error al cerrar sesión', 'error');
+    }
 }
 
 // Inicializar la aplicación cuando el DOM esté listo
