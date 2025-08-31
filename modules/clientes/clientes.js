@@ -1,3 +1,19 @@
+// Verificar permisos antes de cargar el módulo
+import { checkModulePermission } from '../../services/middleware.js';
+
+async function init() {
+    // Verificar permisos para este módulo
+    const hasAccess = await checkModulePermission('clientes');
+    if (!hasAccess) {
+        window.location.href = '/modules/dashboard/index.html';
+        return;
+    }
+    
+    // El resto de la inicialización...
+    setupEventListeners();
+    loadClientesData();
+}
+
 // clientes.js - Módulo de Clientes para DOMKA ERP
 
 // Importaciones de Firebase (versión modular)
