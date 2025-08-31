@@ -130,3 +130,14 @@ export function formatCurrency(amount) {
         currency: 'MXN'
     }).format(amount);
 }
+
+// Verificar si el usuario es superadmin
+export async function isSuperAdmin(userId) {
+    try {
+        const userData = await getUserData(userId);
+        return userData.role === 'superadmin';
+    } catch (error) {
+        console.error('Error checking user role:', error);
+        return false;
+    }
+}
