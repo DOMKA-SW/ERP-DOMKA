@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | DOMKA ERP</title>
+  <title>Iniciar Sesión - DOMKA ERP</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/login.js"></script>
 </head>
-<body>
-  <div class="login-container">
-    <h2>Acceso a DOMKA ERP</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Correo" required>
-      <input type="password" id="password" placeholder="Contraseña" required>
-      <input type="text" id="companyId" placeholder="ID de Empresa" required>
-      <button type="submit">Ingresar</button>
-    </form>
-    <p id="errorMsg"></p>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-card">
+      <h2>Iniciar Sesión</h2>
+      <form id="login-form">
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button type="submit">Ingresar</button>
+      </form>
+      <p>¿No tienes cuenta? <a href="register.html">Regístrate aquí</a></p>
+    </div>
   </div>
-
-  <script type="module" src="js/auth.js"></script>
 </body>
 </html>
