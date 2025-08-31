@@ -27,7 +27,7 @@ const userRoleElement = document.getElementById('userRole');
 const userAvatarElement = document.getElementById('userAvatar');
 const welcomeTitleElement = document.getElementById('welcomeTitle');
 const welcomeMessageElement = document.getElementById('welcomeMessage');
-const logoutBtn = document.getElementById('logoutBtn');
+const outBtn = document.getElementById('outBtn');
 const quickActionBtn = document.getElementById('quickActionBtn');
 
 // Elementos de métricas
@@ -525,18 +525,20 @@ async function toggleTaskCompletion(e) {
     }
 }
 
-// Manejar cierre de sesión
+// Manejar cierre de sesión - Versión corregida
 async function handleLogout() {
     try {
+        // Importar auth desde el servicio correcto
+        const { auth, signOut } = await import('../../services/auth.js');
         await signOut(auth);
-        // Redirigir a la página de auth index.html
-        window.location.href = '../../modules/auth/index.html';
+        
+        // Redirigir a la página de login
+        window.location.href = '/modules/auth/index.html';
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
         showNotification('Error al cerrar sesión', 'error');
     }
 }
-
 // Alternar visibilidad del sidebar
 function toggleSidebar() {
     sidebar.classList.toggle('open');
@@ -697,3 +699,4 @@ function loadNavigation(user) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
