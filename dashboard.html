@@ -7,10 +7,34 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <div class="dashboard">
-    <h1>Panel de Control</h1>
-    <p id="userInfo"></p>
-    <button id="logoutBtn">Cerrar sesión</button>
+  <div class="dashboard-layout">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">DOMKA ERP</div>
+      <nav>
+        <ul>
+          <li><a href="#">📊 Inicio</a></li>
+          <li><a href="#">💼 Facturación</a></li>
+          <li><a href="#">📦 Inventario</a></li>
+          <li><a href="#">👥 Clientes</a></li>
+          <li><a href="#">⚙️ Configuración</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <header class="topbar">
+        <p id="userInfo"></p>
+        <button id="logoutBtn">Cerrar sesión</button>
+      </header>
+
+      <section class="content">
+        <h1>Bienvenido al Panel</h1>
+        <p>Selecciona un módulo del menú lateral para comenzar.</p>
+      </section>
+    </main>
   </div>
 
   <script type="module" src="js/auth.js"></script>
