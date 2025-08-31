@@ -110,8 +110,8 @@ async function handleLogin(e) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
-        // Redirigir según el rol del usuario
-        redirectUserBasedOnRole(user.uid);
+        // Redirigir según el rol del usuario - CORREGIDO
+        await redirectBasedOnRole(user.uid);
         
     } catch (error) {
         console.error('Error al iniciar sesión:', error);
@@ -141,7 +141,6 @@ async function handleLogin(e) {
         loginBtn.textContent = 'Iniciar Sesión';
     }
 }
-
 // Manejar registro de usuario
 async function handleRegister(e) {
     e.preventDefault();
@@ -294,6 +293,7 @@ function togglePasswordVisibility(inputId, button) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
