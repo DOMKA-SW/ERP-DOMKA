@@ -2,6 +2,7 @@
 
 import { auth } from './auth.js';
 import { getUserData } from './database.js';
+import { doc, getDoc, where } from './firebase-config.js';
 
 // Verificar que el usuario puede acceder a un recurso de su empresa
 export async function checkResourceAccess(resourceCompanyId) {
