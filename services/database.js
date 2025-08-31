@@ -39,7 +39,7 @@ export async function createCompanyDocument(companyName) {
     }
 }
 
-// Obtener el rol del usuario
+// Obtener el rol del usuario con verificación robusta
 export async function getUserRole(userId) {
     try {
         const docRef = doc(db, "users", userId);
@@ -47,9 +47,52 @@ export async function getUserRole(userId) {
         
         if (docSnap.exists()) {
             const userData = docSnap.data();
-            return userData.role || "user"; // Valor por defecto "user"
+            console.log("Datos del usuario:", userData);
+            
+            // Verificar si existe el campo role
+            if (userData.role) {
+                return userData.role;
+            } else {
+                // Si no tiene rol, asignar uno por defecto basado en email
+                const defaultRole = userData.email === 'tu_email@dominio.com' ? 'superadmin' : 'user';
+                console.log("Asignando rol por defecto:", defaultRole);
+                
+                // Actualizar el documento con el rol
+                await updateDoc(docRef, { 
+                    role: defaultRole,
+                    // Asegurar que tenga los campos mínimos requeridos
+                    name: userData.name || userData.email.split('@')[0],
+                    email: userData.email,
+                    createdAt: userData.createdAt || new Date()
+                });
+                
+                return defaultRole;
+            }
         } else {
-            // Si no existe el documento, es un usuario nuevo
+            // Si el documento no existe, crearlo
+            console.log("Creando documento de usuario para:", userId);
+            
+            // Obtener el usuario de Authentication
+            const { auth } = await import('./auth.js');
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Determinar rol basado en email
+                const userRole = user.email === 'tu_email@dominio.com' ? 'superadmin' : 'user';
+                
+                // Crear documento de usuario
+                await setDoc(docRef, {
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    role: userRole,
+                    createdAt: new Date(),
+                    lastLogin: new Date()
+                });
+                
+                console.log("Usuario creado con rol:", userRole);
+                return userRole;
+            }
+            
             return "user"; // Rol por defecto
         }
     } catch (e) {
