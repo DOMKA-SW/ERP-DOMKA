@@ -1,17 +1,17 @@
-// Importar configuración de Firebase
+// Importar configuración de Firebase desde el nuevo servicio auth
 import { 
     auth, 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     sendPasswordResetEmail,
-    onAuthStateChanged 
-} from '../../services/firebase-config.js';
+    onAuthStateChanged,
+    redirectBasedOnRole  // Ahora importada desde auth.js
+} from '../../services/auth.js';
 import { 
     createUserDocument, 
-    createCompanyDocument, 
-    getUserRole 
+    createCompanyDocument
 } from '../../services/database.js';
-import { showMessage, redirectBasedOnRole } from '../../services/helpers.js';
+import { showMessage } from '../../services/helpers.js';
 
 // Elementos del DOM
 const loginForm = document.getElementById('loginForm');
@@ -294,5 +294,6 @@ function togglePasswordVisibility(inputId, button) {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);
+
 
 
