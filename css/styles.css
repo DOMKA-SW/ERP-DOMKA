@@ -1,5 +1,5 @@
 /* =========================================================
-   DOMKA ERP - Hoja de estilos completa y unificada
+   DOMKA ERP - Hoja de estilos global (Modernizada)
    ========================================================= */
 
 /* === RESET & BASE === */
@@ -7,13 +7,14 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
+  background: #f4f6f8;
   color: #333;
-  background: #f5f5f5;
   line-height: 1.6;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -25,35 +26,37 @@ body {
 a {
   text-decoration: none;
   color: inherit;
-  transition: 0.3s ease;
+  transition: color 0.3s ease;
 }
 
 a:hover {
-  color: #F27C22;
+  color: #f27c22;
 }
 
 button {
   cursor: pointer;
   border: none;
   border-radius: 12px;
-  font-weight: bold;
+  font-weight: 600;
   transition: all 0.3s ease;
 }
 
 /* === VARIABLES DE COLOR === */
 :root {
-  --color-orange: #F27C22;
-  --color-orange-dark: #d1661b;
-  --color-black: #000;
-  --color-gray-light: #f5f5f5;
+  --color-primary: #f27c22;
+  --color-primary-dark: #d1661b;
+  --color-secondary: #5c5c8a;
+  --color-bg: #f4f6f8;
+  --color-card: #ffffff;
   --color-white: #fff;
-  --secondary-color: #222;
-  --border-radius: 12px;
-  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+  --color-black: #111;
+  --color-gray-light: #e3e6e8;
+  --border-radius: 16px;
+  --shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 /* =========================================================
-   HEADER (landing + dashboard)
+   HEADER
    ========================================================= */
 .main-header {
   background: var(--color-white);
@@ -63,6 +66,7 @@ button {
   position: sticky;
   top: 0;
   z-index: 1000;
+  transition: background 0.3s ease;
 }
 
 .main-header .container {
@@ -76,8 +80,8 @@ button {
   align-items: center;
   gap: 0.5rem;
   font-weight: bold;
-  font-size: 1.3rem;
-  color: var(--color-orange);
+  font-size: 1.5rem;
+  color: var(--color-primary);
 }
 
 .logo img {
@@ -96,42 +100,249 @@ button {
 }
 
 .main-nav a:hover {
-  color: var(--color-orange);
+  color: var(--color-primary);
 }
 
 .main-nav button {
-  background: var(--color-orange);
+  background: var(--color-primary);
   color: var(--color-white);
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.5rem;
   border-radius: var(--border-radius);
 }
 
 .main-nav button:hover {
-  background: var(--color-orange-dark);
+  background: var(--color-primary-dark);
 }
 
 /* =========================================================
-   AUTH (Login, Registro)
+   HERO
+   ========================================================= */
+.hero {
+  background: linear-gradient(135deg, #fff 0%, #fdf7f1 100%);
+  padding: 4rem 0;
+}
+
+.hero .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.hero-content {
+  flex: 1 1 500px;
+  padding: 1rem;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--color-black);
+  animation: fadeInUp 1s ease forwards;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+  animation: fadeInUp 1.2s ease forwards;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  animation: fadeInUp 1.4s ease forwards;
+}
+
+.hero-buttons button {
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  border-radius: var(--border-radius);
+}
+
+.hero-buttons button:first-child {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.hero-buttons button:first-child:hover {
+  background: var(--color-primary-dark);
+}
+
+.hero-buttons .btn-secondary {
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.hero-buttons .btn-secondary:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.hero-image {
+  flex: 1 1 400px;
+  text-align: center;
+}
+
+.hero-image img {
+  max-width: 100%;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  animation: fadeIn 1s ease forwards;
+}
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+.features {
+  padding: 4rem 0;
+}
+
+.features h2 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: var(--color-black);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: var(--shadow);
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+  font-size: 2.5rem;
+}
+
+.feature-card h3 {
+  margin: 1rem 0;
+  color: var(--color-black);
+}
+
+.feature-card p {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* =========================================================
+   CTA
+   ========================================================= */
+.cta {
+  background: var(--color-primary);
+  color: var(--color-white);
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.cta h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.cta p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.cta button {
+  background: var(--color-white);
+  color: var(--color-primary);
+  padding: 0.8rem 2rem;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+}
+
+.cta button:hover {
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+.main-footer {
+  background: var(--color-secondary);
+  color: var(--color-white);
+  padding: 2rem 1rem;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.footer-logo img {
+  height: 40px;
+}
+
+.footer-links a {
+  color: var(--color-white);
+  margin: 0 0.5rem;
+}
+
+.footer-links a:hover {
+  color: var(--color-primary);
+}
+
+.footer-copyright {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* =========================================================
+   FORMULARIOS (Login, Registro)
    ========================================================= */
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: var(--color-gray-light);
+  min-height: 100vh;
+  background: var(--color-bg);
 }
 
 .auth-card {
-  background: var(--color-white);
+  background: var(--color-card);
   padding: 2rem;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   width: 100%;
   max-width: 400px;
+  animation: fadeIn 0.8s ease forwards;
 }
 
 .auth-card h2 {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   color: var(--color-black);
   text-align: center;
 }
@@ -143,31 +354,31 @@ button {
 }
 
 .auth-card input {
-  padding: 0.75rem;
+  padding: 0.8rem;
   border: 1px solid #ddd;
   border-radius: var(--border-radius);
   font-size: 1rem;
-  transition: 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .auth-card input:focus {
   outline: none;
-  border-color: var(--color-orange);
+  border-color: var(--color-primary);
 }
 
 .auth-card button {
-  background: var(--color-orange);
+  background: var(--color-primary);
   color: var(--color-white);
-  padding: 0.75rem;
+  padding: 0.8rem;
   border-radius: var(--border-radius);
 }
 
 .auth-card button:hover {
-  background: var(--color-orange-dark);
+  background: var(--color-primary-dark);
 }
 
 /* =========================================================
-   DASHBOARD
+   DASHBOARD & ERP
    ========================================================= */
 .dashboard {
   display: flex;
@@ -177,11 +388,11 @@ button {
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background: var(--color-black);
+  background: var(--color-secondary);
   color: var(--color-white);
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
 }
 
 .sidebar .logo {
@@ -194,21 +405,22 @@ button {
   border-radius: var(--border-radius);
   margin-bottom: 0.5rem;
   color: var(--color-white);
+  transition: 0.3s;
 }
 
 .sidebar nav a:hover {
-  background: var(--color-orange);
+  background: var(--color-primary);
 }
 
 /* Main content */
 .main-content {
   flex: 1;
-  background: var(--color-gray-light);
+  background: var(--color-bg);
   padding: 2rem;
 }
 
 .topbar {
-  background: var(--color-white);
+  background: var(--color-card);
   padding: 1rem 2rem;
   border-radius: var(--border-radius);
   margin-bottom: 2rem;
@@ -218,30 +430,24 @@ button {
   box-shadow: var(--shadow);
 }
 
-/* Modules Grid */
-.modules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.module-card {
-  background-color: var(--color-white);
+/* Cards y módulos */
+.card, .module-card {
+  background: var(--color-card);
   padding: 1.5rem;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.module-card:hover {
+.card:hover, .module-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 24px rgba(0,0,0,0.15);
 }
 
 .module-card h3 {
   margin-bottom: 0.5rem;
-  color: var(--secondary-color);
+  color: var(--color-primary);
 }
 
 .module-card p {
@@ -249,7 +455,7 @@ button {
   font-size: 0.95rem;
 }
 
-/* SUPERADMIN PANEL */
+/* Superadmin panel */
 #superadmin-panel {
   margin-top: 1rem;
 }
@@ -261,34 +467,32 @@ button {
   align-items: center;
 }
 
-#superadmin-panel input, 
-#superadmin-panel select {
+#superadmin-panel input, #superadmin-panel select {
   flex: 1;
   padding: 0.7rem 1rem;
   border-radius: var(--border-radius);
   border: 1px solid #ccc;
   font-size: 1rem;
-  transition: 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-#superadmin-panel input:focus, 
-#superadmin-panel select:focus {
-  border-color: var(--color-orange);
+#superadmin-panel input:focus, #superadmin-panel select:focus {
+  border-color: var(--color-primary);
   outline: none;
 }
 
 #superadmin-panel button {
-  background: var(--color-orange);
+  background: var(--color-primary);
   color: var(--color-white);
   padding: 0.7rem 1.5rem;
   border-radius: var(--border-radius);
 }
 
 #superadmin-panel button:hover {
-  background: var(--color-orange-dark);
+  background: var(--color-primary-dark);
 }
 
-/* TABLES */
+/* Tablas */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -302,31 +506,59 @@ th, td {
 }
 
 th {
-  background-color: var(--color-orange);
+  background-color: var(--color-primary);
   color: var(--color-white);
 }
 
-/* RESPONSIVE */
+/* Modules grid */
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
 @media (max-width: 768px) {
-  .dashboard {
+  .main-header .container {
     flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hero .container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-buttons {
+    justify-content: center;
   }
 
   .sidebar {
-    width: 100%;
-    flex-direction: row;
-    overflow-x: auto;
+    width: 200px;
   }
 
-  .main-content {
-    padding: 1rem;
-  }
-
-  .modules-grid {
-    grid-template-columns: 1fr;
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
   }
 
   #superadmin-panel form {
     flex-direction: column;
   }
+}
+
+/* =========================================================
+   ANIMACIONES
+   ========================================================= */
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(10px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+@keyframes fadeInUp {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
 }
