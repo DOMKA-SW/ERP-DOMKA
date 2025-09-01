@@ -2,9 +2,9 @@
    RESET Y BASE
 ============================= */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -31,8 +31,9 @@ body {
    LINKS
 ============================= */
 a {
-  text-decoration: none;
   color: var(--secondary-color);
+  text-decoration: none;
+  transition: var(--transition);
 }
 
 a:hover {
@@ -44,7 +45,7 @@ a:hover {
 ============================= */
 .main-header {
   background-color: var(--background-color);
-  padding: 1rem 0;
+  padding: 1rem 2rem;
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
@@ -93,18 +94,11 @@ a:hover {
 ============================= */
 .hero {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 4rem 2rem;
-  background: linear-gradient(135deg, #fff 0%, #fef7f0 100%);
-}
-
-.hero .container {
-  display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #fff 0%, #fef7f0 100%);
 }
 
 .hero-content h1 {
@@ -239,7 +233,7 @@ a:hover {
 .main-footer {
   background-color: var(--secondary-color);
   color: #fff;
-  padding: 2rem 1rem;
+  padding: 2rem 2rem;
 }
 
 .main-footer .footer-content {
@@ -382,8 +376,9 @@ th {
    MEDIA QUERIES
 ============================= */
 @media (max-width: 768px) {
-  .hero .container {
+  .hero {
     flex-direction: column;
+    text-align: center;
   }
 
   .features-grid {
@@ -394,5 +389,8 @@ th {
     flex-direction: column;
     gap: 0.5rem;
   }
-}
 
+  #superadmin-panel form {
+    flex-direction: column;
+  }
+}
