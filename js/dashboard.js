@@ -1,3 +1,4 @@
+// dashboard.js
 import { auth, db } from "./firebase.js";
 import { 
   signOut, onAuthStateChanged, createUserWithEmailAndPassword 
@@ -88,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================
-  // SUPERADMIN: Gestión de Empresas
+  // SUPERADMIN: Gestión de Empresas y Usuarios
   // =========================
   async function initAdminModule() {
     const panel = document.getElementById("superadmin-panel");
@@ -123,10 +124,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const assignForm = document.getElementById("assign-user-form");
     const companySelect = document.getElementById("company-select");
 
-    // Crear empresa
+    // 🔹 Crear empresa
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("company-name").value;
+      const name = document.getElementById("company-name").value.trim();
 
       try {
         await addDoc(collection(db, "companies"), {
@@ -143,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Listar empresas
+    // 🔹 Listar empresas y llenar select
     async function loadCompanies() {
       ul.innerHTML = "";
       companySelect.innerHTML = "";
@@ -152,12 +153,12 @@ document.addEventListener("DOMContentLoaded", () => {
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
 
-        // lista
+        // Lista
         const li = document.createElement("li");
         li.textContent = data.name;
         ul.appendChild(li);
 
-        // select
+        // Select
         const option = document.createElement("option");
         option.value = docSnap.id;
         option.textContent = data.name;
@@ -165,33 +166,46 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Asignar usuario
+    // 🔹 Asignar usuario a empresa
     assignForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById("user-email").value;
+      const email = document.getElementById("user-email").value.trim().toLowerCase();
       const role = document.getElementById("user-role").value;
       const companyId = companySelect.value;
 
       try {
-        // 🔹 Intentar crear usuario en Auth (si no existe)
-        let userRecord;
+        // Intentar crear usuario en Auth si no existe
+        let uid;
         try {
-          userRecord = await createUserWithEmailAndPassword(auth, email, "Temporal123*");
-          console.log("Usuario creado en Auth:", userRecord.user.uid);
+          const userCredential = await createUserWithEmailAndPassword(auth, email, "Temporal123*");
+          uid = userCredential.user.uid;
+          console.log("Usuario creado en Auth:", uid);
         } catch (err) {
-          console.log("Usuario ya existe o error:", err.message);
+          console.log("Usuario ya existe en Auth:", err.message);
+          // Buscar UID existente en Firestore
+          const usersSnap = await getDocs(collection(db, "users"));
+          const existingUser = usersSnap.docs.find(u => u.data().email === email);
+          if (existingUser) uid = existingUser.id;
         }
 
-        // 🔹 Guardar en colección users
-        const uid = userRecord?.user?.uid || email; // fallback si no hay uid
-        const userDocRef = doc(db, "users", uid);
-        await setDoc(userDocRef, {
+        if (!uid) throw new Error("No se pudo obtener UID del usuario");
+
+        // Guardar en users/{uid}
+        await setDoc(doc(db, "users", uid), {
           email,
           role,
-          companyId
+          companyId,
+          createdAt: serverTimestamp()
         });
 
-        alert("Usuario asignado correctamente ✅");
+        // Guardar en subcolección companies/{companyId}/users/{uid}
+        await setDoc(doc(db, "companies", companyId, "users", uid), {
+          email,
+          role,
+          createdAt: serverTimestamp()
+        });
+
+        alert(`Usuario ${email} asignado correctamente ✅`);
         assignForm.reset();
       } catch (err) {
         console.error("Error asignando usuario:", err);
@@ -199,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    loadCompanies();
+    // Inicializar listado
+    await loadCompanies();
   }
 });
