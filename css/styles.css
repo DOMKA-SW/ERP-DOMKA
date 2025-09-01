@@ -1,174 +1,167 @@
-/* =========================================================
-   DOMKA ERP - Hoja de estilos global
-   Colores principales: Naranja (#f97316), Negro (#111), Blanco (#fff)
-   ========================================================= */
-
-/* === RESET & BASE === */
+/* =============================
+   RESET Y BASE
+============================= */
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  color: #111;
-  background: #fff;
+  background-color: #f5f5f5;
+  color: #333;
   line-height: 1.6;
 }
 
-.container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
+/* =============================
+   VARIABLES DE COLOR
+============================= */
+:root {
+  --primary-color: #F27C22;
+  --primary-dark: #d1661b;
+  --secondary-color: #000;
+  --background-color: #fff;
+  --border-radius: 12px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+  --transition: 0.3s ease;
 }
 
+/* =============================
+   LINKS
+============================= */
 a {
   text-decoration: none;
-  color: inherit;
+  color: var(--secondary-color);
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  transition: all 0.2s ease;
+a:hover {
+  color: var(--primary-color);
 }
 
-/* === VARIABLES DE COLOR === */
-:root {
-  --color-orange: #f97316;
-  --color-orange-dark: #c75d0d;
-  --color-black: #111;
-  --color-gray-light: #f5f6fa;
-  --color-white: #fff;
-}
-
-/* =========================================================
-   HEADER (usado en landing y dashboard)
-   ========================================================= */
+/* =============================
+   HEADER
+============================= */
 .main-header {
-  background: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--background-color);
   padding: 1rem 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .main-header .container {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 }
 
-.logo {
+.main-header .logo {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: bold;
-  font-size: 1.3rem;
-  color: var(--color-orange);
 }
 
-.logo img {
-  height: 40px;
+.main-header .logo img {
+  width: 50px;
+  height: 50px;
 }
 
-.main-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.main-nav a {
-  color: var(--color-white);
+.main-header .main-nav a,
+.main-header .main-nav button {
+  margin-left: 1rem;
   font-weight: 500;
 }
 
-.main-nav a:hover {
-  color: var(--color-orange);
-}
-
-.main-nav button {
-  background: var(--color-orange);
-  color: var(--color-white);
+.main-header .main-nav button {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
   padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-.main-nav button:hover {
-  background: var(--color-orange-dark);
+.main-header .main-nav button:hover {
+  background-color: var(--primary-dark);
 }
 
-/* =========================================================
-   HERO (Landing - index.html)
-   ========================================================= */
+/* =============================
+   HERO
+============================= */
 .hero {
-  background: linear-gradient(to right, var(--color-orange), #ff8f38);
-  color: var(--color-white);
-  padding: 4rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #fff 0%, #fef7f0 100%);
 }
 
 .hero .container {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-}
-
-.hero-content {
-  flex: 1 1 500px;
-  padding: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 }
 
 .hero-content h1 {
   font-size: 2.5rem;
+  color: var(--secondary-color);
   margin-bottom: 1rem;
 }
 
 .hero-content p {
   font-size: 1.1rem;
   margin-bottom: 1.5rem;
-}
-
-.hero-buttons {
-  display: flex;
-  gap: 1rem;
+  color: #555;
 }
 
 .hero-buttons button {
-  padding: 0.8rem 1.5rem;
+  margin-right: 1rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  border-radius: var(--border-radius);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
 .hero-buttons button:first-child {
-  background: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.hero-buttons button:first-child:hover {
+  background-color: var(--primary-dark);
 }
 
 .hero-buttons .btn-secondary {
-  background: var(--color-white);
-  color: var(--color-black);
+  background-color: #fff;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
 }
 
-.hero-buttons button:hover {
-  opacity: 0.85;
-}
-
-.hero-image {
-  flex: 1 1 400px;
-  text-align: center;
+.hero-buttons .btn-secondary:hover {
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
 .hero-image img {
-  max-width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 600px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
 }
 
-/* =========================================================
-   FEATURES (Landing - index.html)
-   ========================================================= */
+/* =============================
+   FEATURES
+============================= */
 .features {
-  padding: 4rem 0;
-  background: var(--color-white);
+  padding: 4rem 2rem;
+  background-color: #fff;
 }
 
 .features h2 {
@@ -184,310 +177,221 @@ button {
 }
 
 .feature-card {
-  background: var(--color-gray-light);
+  background-color: #fef7f0;
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
   text-align: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
 }
 
-.feature-icon {
-  margin-bottom: 1rem;
-  color: var(--color-orange);
-  font-size: 2.5rem;
+.feature-card h3 {
+  margin: 1rem 0;
+  color: var(--secondary-color);
 }
 
-/* =========================================================
-   CTA (Landing - index.html)
-   ========================================================= */
+.feature-card p {
+  color: #555;
+}
+
+/* =============================
+   CTA
+============================= */
 .cta {
-  background: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-color);
+  color: #fff;
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 2rem;
+}
+
+.cta h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.cta p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
 }
 
 .cta button {
-  background: var(--color-orange);
-  color: var(--color-white);
-  padding: 0.8rem 2rem;
+  background-color: #fff;
+  color: var(--primary-color);
+  border: none;
+  padding: 0.7rem 2rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .cta button:hover {
-  background: var(--color-orange-dark);
+  background-color: var(--primary-dark);
+  color: #fff;
 }
 
-/* =========================================================
+/* =============================
    FOOTER
-   ========================================================= */
+============================= */
 .main-footer {
-  background: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--secondary-color);
+  color: #fff;
   padding: 2rem 1rem;
 }
 
-.footer-content {
+.main-footer .footer-content {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  gap: 1rem;
 }
 
-.footer-logo {
+.main-footer .footer-links a {
+  color: #fff;
+  margin-left: 1rem;
+  transition: var(--transition);
+}
+
+.main-footer .footer-links a:hover {
+  color: var(--primary-color);
+}
+
+.main-footer .footer-logo {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-orange);
-  font-weight: bold;
 }
 
-.footer-logo img {
-  height: 30px;
+.main-footer .footer-logo img {
+  width: 40px;
+  height: 40px;
 }
 
-.footer-links a {
-  color: var(--color-white);
-  margin: 0 0.5rem;
-}
-
-.footer-links a:hover {
-  color: var(--color-orange);
-}
-
-.footer-copyright {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #aaa;
-}
-
-/* =========================================================
-   FORMULARIOS (Login, Registro, etc.)
-   ========================================================= */
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: var(--color-gray-light);
-}
-
-.auth-card {
-  background: var(--color-white);
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 400px;
-}
-
-.auth-card h2 {
-  margin-bottom: 1rem;
-  color: var(--color-black);
-  text-align: center;
-}
-
-.auth-card form {
+/* =============================
+   FORMULARIOS
+============================= */
+form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.auth-card input {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+input, select {
+  padding: 0.7rem 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid #ccc;
   font-size: 1rem;
+  transition: var(--transition);
 }
 
-.auth-card input:focus {
+input:focus, select:focus {
+  border-color: var(--primary-color);
   outline: none;
-  border-color: var(--color-orange);
 }
 
-.auth-card button {
-  background: var(--color-orange);
-  color: var(--color-white);
-  padding: 0.75rem;
+button {
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--border-radius);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-.auth-card button:hover {
-  background: var(--color-orange-dark);
+button:hover {
+  opacity: 0.9;
 }
 
-/* =========================================================
-   DASHBOARD (estructura ERP)
-   ========================================================= */
-.dashboard {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 250px;
-  background: var(--color-black);
-  color: var(--color-white);
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-}
-
-.sidebar .logo {
-  margin-bottom: 2rem;
-}
-
-.sidebar nav a {
-  display: block;
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-}
-
-.sidebar nav a:hover {
-  background: var(--color-orange);
-  color: var(--color-white);
-}
-
-/* Main content */
-.main-content {
-  flex: 1;
-  background: var(--color-gray-light);
+/* =============================
+   DASHBOARD / MODULES
+============================= */
+.module {
+  background-color: #fff;
   padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
 }
 
-.topbar {
-  background: var(--color-white);
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
+.module h2 {
+  margin-bottom: 1rem;
+  color: var(--secondary-color);
+}
+
+.module ul {
+  list-style: none;
+}
+
+.module ul li {
+  padding: 0.5rem 0;
+  font-weight: 500;
+}
+
+/* =============================
+   SUPERADMIN PANEL
+============================= */
+#superadmin-panel {
+  margin-top: 1rem;
+}
+
+#superadmin-panel form {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
   align-items: center;
 }
 
-/* Cards y módulos */
-.card {
-  background: var(--color-white);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  margin-bottom: 1.5rem;
+#superadmin-panel input, 
+#superadmin-panel select {
+  flex: 1;
 }
 
-.card h3 {
-  margin-bottom: 1rem;
+#superadmin-panel button {
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+#superadmin-panel button:hover {
+  background-color: var(--primary-dark);
+}
+
+/* =============================
+   TABLAS
+============================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* =============================
+   MEDIA QUERIES
+============================= */
 @media (max-width: 768px) {
-  .main-header .container {
-    flex-direction: column;
-  }
-
   .hero .container {
     flex-direction: column;
-    text-align: center;
   }
 
-  .sidebar {
-    width: 200px;
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-header .main-nav {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
-
-/* === DASHBOARD LAYOUT === */
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 240px;
-  background-color: #111;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1rem;
-}
-
-.sidebar-header {
-  text-align: center;
-}
-.sidebar-header img {
-  width: 60px;
-  margin-bottom: 0.5rem;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-.sidebar-nav a {
-  color: #fff;
-  text-decoration: none;
-  padding: 0.6rem 1rem;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-.sidebar-nav a:hover,
-.sidebar-nav a.active {
-  background-color: #F27C22;
-  color: #fff;
-}
-
-/* Logout button */
-.btn-logout {
-  background-color: #F27C22;
-  border: none;
-  color: #fff;
-  padding: 0.8rem;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: background 0.3s;
-}
-.btn-logout:hover {
-  background-color: #d9650e;
-}
-
-/* Main content */
-.main-content {
-  flex: 1;
-  background-color: #f9f9f9;
-  padding: 1.5rem;
-}
-
-/* Topbar */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-/* Widgets */
-.widgets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-.widget-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
