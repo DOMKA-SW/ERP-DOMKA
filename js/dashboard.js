@@ -1,30 +1,26 @@
-// dashboard.js
 import { auth, db } from "./firebase.js";
 import { signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
+// ==================================
+// INICIO
+// ==================================
 document.addEventListener("DOMContentLoaded", () => {
   const userInfo = document.getElementById("user-info");
   const logoutBtn = document.getElementById("logout-btn");
   const modulesSection = document.getElementById("modules-section");
-  const sidebarLinks = document.querySelectorAll('.sidebar nav a');
+  const sidebarLinks = document.querySelectorAll(".sidebar nav a");
 
-  let currentUserData = null;
+  let currentUserData;
 
-  // 🔹 Verificar sesión
-  onAuthStateChanged(auth, async (user) => {
-    if(!user) return window.location.href = "login.html";
-
+  // 🔹 Verificar sesión activa
+  onAuthStateChanged(auth, async user => {
+    if (!user) return window.location.href = "login.html";
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    currentUserData = userDoc.data();
-    if(!currentUserData) return alert("Usuario no registrado en la base de datos.");
-
-    userInfo.textContent = `Hola, ${currentUserData.email} (${currentUserData.role})`;
-
-    // Render inicial según rol
-    if(currentUserData.role === "superadmin") renderSuperAdminModules();
-    else if(currentUserData.role === "admin") renderAdminModules();
-    else renderUserModules();
+    const userData = userDoc.data();
+    if (!userData) return alert("Usuario no registrado en la base de datos.");
+    currentUserData = userData;
+    userInfo.textContent = `Hola, ${userData.email} (${userData.role})`;
   });
 
   // 🔹 Logout
@@ -33,222 +29,210 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "login.html";
   });
 
-  // 🔹 Sidebar dinámico
+  // 🔹 Sidebar click
   sidebarLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
+    link.addEventListener("click", e => {
       e.preventDefault();
       const module = link.dataset.module;
-
-      switch(module) {
-        case 'clients': renderClientsModule(); break;
-        case 'inventory': renderInventoryModule(); break;
-        case 'quotes': renderQuotesModule(); break;
-        case 'reports': renderReportsModule(); break;
-        case 'settings': renderSettingsModule(); break;
-        case 'superadmin': renderSuperAdminPanel(); break;
+      if (!currentUserData) return alert("No hay usuario cargado");
+      switch(module){
+        case "clients": renderClientsModule(currentUserData); break;
+        case "inventory": renderInventoryModule(currentUserData); break;
+        case "quotes": renderQuotesModule(currentUserData); break;
         default: modulesSection.innerHTML = "<p>Selecciona un módulo</p>";
       }
     });
   });
 
   // =========================
-  // RENDER DE MÓDULOS POR ROL
-  // =========================
-  function renderUserModules() {
-    modulesSection.innerHTML = `
-      <h2>Bienvenido</h2>
-      <p>Selecciona un módulo del sidebar.</p>
-    `;
-  }
-
-  function renderAdminModules() {
-    modulesSection.innerHTML = `
-      <h2>Panel de Admin</h2>
-      <p>Selecciona un módulo del sidebar.</p>
-    `;
-  }
-
-  function renderSuperAdminModules() {
-    modulesSection.innerHTML = `
-      <h2>SuperAdmin</h2>
-      <p>Gestión completa de empresas y usuarios.</p>
-    `;
-  }
-
-  // =========================
   // CLIENTES
   // =========================
-  async function renderClientsModule() {
+  async function renderClientsModule(userData){
     modulesSection.innerHTML = `
-      <h2>Clientes</h2>
-      <div id="clients-list"></div>
-      <form id="add-client-form">
-        <input type="text" id="client-name" placeholder="Nombre del cliente" required>
-        <input type="email" id="client-email" placeholder="Email" required>
-        <button type="submit">➕ Agregar Cliente</button>
-      </form>
+      <div class="module-card">
+        <h3>👥 Clientes</h3>
+        <form id="create-client-form">
+          <input type="text" id="client-name" placeholder="Nombre cliente" required>
+          <input type="email" id="client-email" placeholder="Email" required>
+          <button type="submit">➕ Crear Cliente</button>
+        </form>
+        <ul id="clients-list"></ul>
+      </div>
     `;
-
+    const form = document.getElementById("create-client-form");
     const clientsList = document.getElementById("clients-list");
-    const addClientForm = document.getElementById("add-client-form");
 
-    async function loadClients() {
-      clientsList.innerHTML = "";
-      const snapshot = await getDocs(collection(db, "clients"));
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const div = document.createElement("div");
-        div.textContent = `${data.name} (${data.email})`;
-        clientsList.appendChild(div);
-      });
-    }
-
-    addClientForm.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
       const name = document.getElementById("client-name").value;
       const email = document.getElementById("client-email").value;
       try {
-        await addDoc(collection(db, "clients"), { name, email, createdAt: serverTimestamp() });
-        addClientForm.reset();
+        await addDoc(collection(db, "users"), {
+          name, email, role: "user", companyId: userData.companyId
+        });
+        alert("Cliente creado ✅");
+        form.reset();
         loadClients();
-      } catch(err) {
-        console.error(err);
-        alert("Error al agregar cliente");
-      }
+      } catch(err){ console.error(err); alert("Error al crear cliente"); }
     });
 
-    await loadClients();
+    async function loadClients(){
+      clientsList.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "users"));
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if(data.role === "user" && data.companyId === userData.companyId){
+          const li = document.createElement("li");
+          li.textContent = `${data.name} - ${data.email}`;
+          clientsList.appendChild(li);
+        }
+      });
+    }
+    loadClients();
   }
 
   // =========================
   // INVENTARIO
   // =========================
-  async function renderInventoryModule() {
+  async function renderInventoryModule(userData){
     modulesSection.innerHTML = `
-      <h2>Inventario</h2>
-      <div id="inventory-list"></div>
-      <form id="add-inventory-form">
-        <input type="text" id="item-name" placeholder="Nombre del producto" required>
-        <input type="number" id="item-stock" placeholder="Stock" required>
-        <button type="submit">➕ Agregar Producto</button>
-      </form>
+      <div class="module-card">
+        <h3>📦 Inventario</h3>
+        <form id="create-product-form">
+          <input type="text" id="product-name" placeholder="Nombre producto" required>
+          <input type="number" id="product-stock" placeholder="Stock" required>
+          <input type="number" id="product-price" placeholder="Precio" required>
+          <button type="submit">➕ Crear Producto</button>
+        </form>
+        <ul id="products-list"></ul>
+      </div>
     `;
+    const form = document.getElementById("create-product-form");
+    const productsList = document.getElementById("products-list");
 
-    const inventoryList = document.getElementById("inventory-list");
-    const addInventoryForm = document.getElementById("add-inventory-form");
-
-    async function loadInventory() {
-      inventoryList.innerHTML = "";
-      const snapshot = await getDocs(collection(db, "inventory"));
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const div = document.createElement("div");
-        div.textContent = `${data.name} - Stock: ${data.stock}`;
-        inventoryList.appendChild(div);
-      });
-    }
-
-    addInventoryForm.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
-      const name = document.getElementById("item-name").value;
-      const stock = parseInt(document.getElementById("item-stock").value);
+      const name = document.getElementById("product-name").value;
+      const stock = parseInt(document.getElementById("product-stock").value);
+      const price = parseFloat(document.getElementById("product-price").value);
       try {
-        await addDoc(collection(db, "inventory"), { name, stock, createdAt: serverTimestamp() });
-        addInventoryForm.reset();
-        loadInventory();
-      } catch(err) {
-        console.error(err);
-        alert("Error al agregar producto");
-      }
+        await addDoc(collection(db, "products"), { name, stock, price, companyId: userData.companyId });
+        alert("Producto creado ✅");
+        form.reset();
+        loadProducts();
+      } catch(err){ console.error(err); alert("Error al crear producto"); }
     });
 
-    await loadInventory();
+    async function loadProducts(){
+      productsList.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "products"));
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if(data.companyId === userData.companyId){
+          const li = document.createElement("li");
+          li.textContent = `${data.name} - Stock: ${data.stock} - $${data.price.toFixed(2)}`;
+          productsList.appendChild(li);
+        }
+      });
+    }
+    loadProducts();
   }
 
   // =========================
-  // COTIZACIONES, REPORTES, CONFIG
+  // COTIZACIONES
   // =========================
-  function renderQuotesModule() { modulesSection.innerHTML = "<h2>Cotizaciones</h2><p>En construcción...</p>"; }
-  function renderReportsModule() { modulesSection.innerHTML = "<h2>Reportes</h2><p>En construcción...</p>"; }
-  function renderSettingsModule() { modulesSection.innerHTML = "<h2>Configuración</h2><p>En construcción...</p>"; }
-
-  // =========================
-  // SUPERADMIN PANEL
-  // =========================
-  async function renderSuperAdminPanel() {
+  async function renderQuotesModule(userData){
     modulesSection.innerHTML = `
-      <h2>SuperAdmin: Gestión de Empresas</h2>
-      <form id="create-company-form">
-        <input type="text" id="company-name" placeholder="Nombre de la empresa" required>
-        <button type="submit">➕ Crear Empresa</button>
-      </form>
-
-      <div class="companies-list">
-        <h4>Empresas Registradas</h4>
-        <ul id="companies-ul"></ul>
-      </div>
-
-      <div class="assign-user">
-        <h4>Asignar Usuario</h4>
-        <form id="assign-user-form">
-          <select id="company-select" required></select>
-          <input type="email" id="user-email" placeholder="Email del usuario" required>
-          <select id="user-role">
-            <option value="user">Usuario</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button type="submit">Asignar</button>
+      <div class="module-card">
+        <h3>📋 Cotizaciones</h3>
+        <form id="create-quote-form">
+          <select id="client-select" required></select>
+          <div id="quote-items">
+            <input type="text" placeholder="Producto" class="product-name" required>
+            <input type="number" placeholder="Cantidad" class="product-qty" required>
+            <input type="number" placeholder="Precio" class="product-price" required>
+          </div>
+          <button type="button" id="add-item-btn">➕ Agregar Producto</button>
+          <button type="submit">💾 Crear Cotización</button>
         </form>
+        <h4>Listado de Cotizaciones</h4>
+        <ul id="quotes-list"></ul>
       </div>
     `;
 
-    const form = document.getElementById("create-company-form");
-    const ul = document.getElementById("companies-ul");
-    const assignForm = document.getElementById("assign-user-form");
-    const companySelect = document.getElementById("company-select");
+    const form = document.getElementById("create-quote-form");
+    const clientSelect = document.getElementById("client-select");
+    const quotesList = document.getElementById("quotes-list");
+    const addItemBtn = document.getElementById("add-item-btn");
+    const quoteItems = document.getElementById("quote-items");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("company-name").value;
-      try {
-        await addDoc(collection(db, "companies"), { name, createdAt: serverTimestamp() });
-        alert("Empresa creada ✅");
-        form.reset();
-        loadCompanies();
-      } catch(err) { console.error(err); alert("Error al crear empresa"); }
-    });
-
-    async function loadCompanies() {
-      ul.innerHTML = "";
-      companySelect.innerHTML = "";
-      const snapshot = await getDocs(collection(db, "companies"));
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const li = document.createElement("li");
-        li.textContent = data.name;
-        ul.appendChild(li);
-
+    // Clientes
+    const clientsSnapshot = await getDocs(collection(db, "users"));
+    clientsSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if(data.companyId === userData.companyId && data.role === "user"){
         const option = document.createElement("option");
         option.value = docSnap.id;
-        option.textContent = data.name;
-        companySelect.appendChild(option);
-      });
-    }
-
-    assignForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("user-email").value;
-      const role = document.getElementById("user-role").value;
-      const companyId = companySelect.value;
-      try {
-        let userRecord = await createUserWithEmailAndPassword(auth, email, "Temporal123*").catch(() => null);
-        const uid = userRecord?.user?.uid || email;
-        await setDoc(doc(db, "users", uid), { email, role, companyId });
-        assignForm.reset();
-        alert("Usuario asignado ✅");
-      } catch(err) { console.error(err); alert("Error al asignar usuario"); }
+        option.textContent = data.email;
+        clientSelect.appendChild(option);
+      }
     });
 
-    await loadCompanies();
+    // Agregar producto
+    addItemBtn.addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <input type="text" placeholder="Producto" class="product-name" required>
+        <input type="number" placeholder="Cantidad" class="product-qty" required>
+        <input type="number" placeholder="Precio" class="product-price" required>
+      `;
+      quoteItems.appendChild(div);
+    });
+
+    // Crear cotización
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const clientId = clientSelect.value;
+      const items = Array.from(quoteItems.querySelectorAll("div, input")).map(div => {
+        const name = div.querySelector(".product-name")?.value;
+        const qty = parseInt(div.querySelector(".product-qty")?.value);
+        const price = parseFloat(div.querySelector(".product-price")?.value);
+        return name && qty && price ? { name, qty, price, productId: null } : null;
+      }).filter(x=>x);
+      const total = items.reduce((acc,item)=>acc+item.qty*item.price,0);
+      try{
+        await addDoc(collection(db,"quotes"),{
+          clientId,
+          companyId:userData.companyId,
+          items,
+          total,
+          createdAt: serverTimestamp(),
+          createdBy: auth.currentUser.uid
+        });
+        alert("Cotización creada ✅");
+        form.reset();
+        quoteItems.innerHTML = `
+          <input type="text" placeholder="Producto" class="product-name" required>
+          <input type="number" placeholder="Cantidad" class="product-qty" required>
+          <input type="number" placeholder="Precio" class="product-price" required>
+        `;
+        loadQuotes();
+      }catch(err){console.error(err); alert("Error al crear cotización");}
+    });
+
+    // Listado
+    async function loadQuotes(){
+      quotesList.innerHTML = "";
+      const quotesSnapshot = await getDocs(collection(db,"quotes"));
+      quotesSnapshot.forEach(docSnap=>{
+        const data = docSnap.data();
+        if(data.companyId===userData.companyId){
+          const li = document.createElement("li");
+          li.textContent = `Cliente: ${data.clientId} - Total: $${data.total.toFixed(2)}`;
+          quotesList.appendChild(li);
+        }
+      });
+    }
+    loadQuotes();
   }
 });
