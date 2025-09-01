@@ -37,29 +37,36 @@
         <div id="user-info">Hola, Usuario</div>
       </div>
 
-      <!-- Módulos -->
-      <section id="modules-section" class="modules-grid">
-        <!-- Módulos cargados dinámicamente según rol -->
-      </section>
+<div id="modules-section" class="modules-grid">
+  <!-- Módulo Clientes -->
+  <div class="module-card" id="clients-module">
+    <h3>👥 Clientes</h3>
+    <p>Gestiona la información de tus clientes.</p>
 
-      <!-- Clientes Module -->
-      <section id="clientes-module" class="module-card" style="display:none;">
-        <h3>👥 Gestión de Clientes</h3>
-        <p>Administra todos los clientes de tu empresa.</p>
+    <!-- Formulario para agregar/editar clientes -->
+    <form id="client-form" class="client-form">
+      <input type="hidden" id="client-id" value="">
+      <input type="text" id="client-name" placeholder="Nombre completo" required>
+      <input type="email" id="client-email" placeholder="Email" required>
+      <input type="text" id="client-phone" placeholder="Teléfono" required>
+      <button type="submit">Guardar Cliente</button>
+    </form>
 
-        <form id="cliente-form">
-          <input type="hidden" id="cliente-id">
-          <input type="text" id="cliente-nombre" placeholder="Nombre completo" required>
-          <input type="email" id="cliente-email" placeholder="Email" required>
-          <input type="text" id="cliente-telefono" placeholder="Teléfono">
-          <button type="submit">Guardar Cliente</button>
-        </form>
+    <!-- Tabla de clientes -->
+    <table id="clients-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 
-        <div class="clientes-list">
-          <h4>Clientes Registrados</h4>
-          <ul id="clientes-ul"></ul>
-        </div>
-      </section>
 
       <!-- SuperAdmin Panel -->
       <section id="superadmin-panel" class="module-card" style="display:none;">
