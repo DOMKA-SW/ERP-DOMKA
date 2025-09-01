@@ -562,3 +562,71 @@ th {
   from {opacity: 0; transform: translateY(20px);}
   to {opacity: 1; transform: translateY(0);}
 }
+
+#clientes-module form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+#clientes-module input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  transition: 0.3s;
+}
+
+#clientes-module input:focus {
+  border-color: #F27C22;
+  outline: none;
+}
+
+#clientes-module button {
+  background-color: #F27C22;
+  color: #fff;
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+#clientes-module button:hover {
+  background-color: #d1661b;
+}
+
+#clientes-module ul {
+  list-style: none;
+}
+
+#clientes-module li {
+  background: #fff;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+#clientes-module li:hover {
+  transform: translateY(-2px);
+}
+
+#clientes-module .editar-btn,
+#clientes-module .eliminar-btn {
+  margin-left: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#clientes-module .editar-btn { background: #4CAF50; color: #fff; }
+#clientes-module .editar-btn:hover { background: #45a049; }
+
+#clientes-module .eliminar-btn { background: #F44336; color: #fff; }
+#clientes-module .eliminar-btn:hover { background: #d32f2f; }
