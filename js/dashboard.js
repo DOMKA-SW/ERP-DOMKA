@@ -1,24 +1,7 @@
 // dashboard.js
 import { auth, db } from "./firebase.js";
-import {
-  signOut,
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  serverTimestamp,
-  doc,
-  setDoc,
-  getDoc,
-  deleteDoc,
-} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-import { renderClientsModule } from "./clients.js";
-import { renderInventoryModule } from "./inventory.js";
-
-
+import { signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { collection, getDocs, doc, getDoc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const userInfo = document.getElementById("user-info");
@@ -26,19 +9,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const modulesSection = document.getElementById("modules-section");
 
   // 🔹 Verificar sesión activa
-  onAuthStateChanged(auth, async () => {
-    if (!) return (window.location.href = "login.html");
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return window.location.href = "login.html";
 
-    const Doc = await getDoc(doc(db, "s", .uid));
-    const Data = Doc.data();
-    if (!Data) return alert("Usuario no registrado en la base de datos.");
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userData = userDoc.data();
+    if (!userData) return alert("Usuario no registrado en la base de datos.");
 
-    Info.textContent = `Hola, ${Data.email} (${Data.role})`;
+    userInfo.textContent = `Hola, ${userData.email} (${userData.role})`;
 
-    // Render según rol
-    if (Data.role === "superadmin") renderSuperAdminModules(Data);
-    else if (Data.role === "admin") renderAdminModules(Data);
-    else renderUserModules(userData);
+    renderModules(userData);
   });
 
   // 🔹 Logout
@@ -48,52 +28,89 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================
-  // RENDER MÓDULOS
+  // RENDER DE MÓDULOS
   // =========================
-function renderUserModules(userData) {
-  modulesSection.innerHTML = `
-    <div class="modules-grid">
+  function renderModules(userData) {
+    modulesSection.innerHTML = "";
+
+    // Usuarios normales
+    if (userData.role === "user") {
+      renderUserModules(userData);
+    }
+    // Admin
+    else if (userData.role === "admin") {
+      renderAdminModules(userData);
+    }
+    // SuperAdmin
+    else if (userData.role === "superadmin") {
+      renderSuperAdminModules();
+    }
+  }
+
+  // =========================
+  // MÓDULOS USUARIO
+  // =========================
+  function renderUserModules(userData) {
+    modulesSection.innerHTML = `
       <div class="module-card">
         <h3>👥 Clientes</h3>
-        <div id="clients-module"></div>
+        <div id="clients-module">Cargando...</div>
       </div>
       <div class="module-card">
         <h3>📦 Inventario</h3>
-        <div id="inventory-module"></div>
-      </div>
-    </div>
-  `;
-  renderClientsModule(userData);
-  renderInventoryModule(userData);
-}
-
-  function renderAdminModules(userData) {
-    modulesSection.innerHTML = `
-      <div class="modules-grid">
-        <div class="module-card">
-          <h3>👥 Clientes</h3>
-          <div id="clients-module"></div>
-        </div>
+        <div id="inventory-module">Cargando...</div>
       </div>
     `;
     renderClientsModule(userData);
+    renderInventoryModule(userData);
   }
 
-  function renderSuperAdminModules(userData) {
+  // =========================
+  // MÓDULOS ADMIN
+  // =========================
+  function renderAdminModules(userData) {
     modulesSection.innerHTML = `
-      <div class="modules-grid">
-        <div class="module-card superadmin">
-          <h3>SuperAdmin</h3>
-          <p>Gestión completa de empresas y usuarios.</p>
-          <div id="superadmin-panel"></div>
-        </div>
+      <div class="module-card admin">
+        <h3>📊 Reportes</h3>
+        <p>Visualiza estadísticas y reportes de tu empresa.</p>
+      </div>
+      <div class="module-card admin">
+        <h3>⚙️ Configuración Empresa</h3>
+        <p>Actualiza la información de tu empresa.</p>
+      </div>
+      <div class="module-card admin">
+        <h3>👥 Gestión de Usuarios</h3>
+        <p>Agrega, elimina o modifica usuarios internos.</p>
+      </div>
+      <div class="module-card">
+        <h3>👥 Clientes</h3>
+        <div id="clients-module">Cargando...</div>
+      </div>
+      <div class="module-card">
+        <h3>📦 Inventario</h3>
+        <div id="inventory-module">Cargando...</div>
+      </div>
+    `;
+    renderClientsModule(userData);
+    renderInventoryModule(userData);
+  }
+
+  // =========================
+  // MÓDULOS SUPERADMIN
+  // =========================
+  function renderSuperAdminModules() {
+    modulesSection.innerHTML = `
+      <div class="module-card superadmin">
+        <h3>SuperAdmin</h3>
+        <p>Gestión completa de empresas y usuarios.</p>
+        <div id="superadmin-panel">Cargando panel...</div>
       </div>
     `;
     initSuperAdminPanel();
   }
 
   // =========================
-  // SUPERADMIN: Gestión de Empresas
+  // SUPERADMIN PANEL
   // =========================
   async function initSuperAdminPanel() {
     const panel = document.getElementById("superadmin-panel");
@@ -125,8 +142,7 @@ function renderUserModules(userData) {
     const assignForm = document.getElementById("assign-user-form");
     const companySelect = document.getElementById("company-select");
 
-    // Crear empresa
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
       const name = document.getElementById("company-name").value;
       try {
@@ -134,18 +150,17 @@ function renderUserModules(userData) {
         alert("Empresa creada ✅");
         form.reset();
         await loadCompanies();
-      } catch (err) {
+      } catch(err) {
         console.error(err);
         alert("Error al crear empresa");
       }
     });
 
-    // Listar empresas
     async function loadCompanies() {
       ul.innerHTML = "";
       companySelect.innerHTML = "";
       const snapshot = await getDocs(collection(db, "companies"));
-      snapshot.forEach((docSnap) => {
+      snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const li = document.createElement("li");
         li.textContent = data.name;
@@ -158,8 +173,7 @@ function renderUserModules(userData) {
       });
     }
 
-    // Asignar usuario
-    assignForm.addEventListener("submit", async (e) => {
+    assignForm.addEventListener("submit", async e => {
       e.preventDefault();
       const email = document.getElementById("user-email").value;
       const role = document.getElementById("user-role").value;
@@ -170,7 +184,7 @@ function renderUserModules(userData) {
         await setDoc(doc(db, "users", uid), { email, role, companyId });
         assignForm.reset();
         alert("Usuario asignado ✅");
-      } catch (err) {
+      } catch(err) {
         console.error(err);
         alert("Error al asignar usuario");
       }
@@ -179,98 +193,77 @@ function renderUserModules(userData) {
     await loadCompanies();
   }
 
-// =========================
-// MÓDULO CLIENTES
-// =========================
-async function renderClientsModule() {
-  modulesSection.innerHTML = `
-    <div class="module-card">
-      <h3>👥 Clientes</h3>
-      <p>Gestión completa de tus clientes.</p>
-      <div id="clients-panel">
-        <form id="add-client-form">
-          <input type="text" id="client-name" placeholder="Nombre del cliente" required>
-          <input type="email" id="client-email" placeholder="Email" required>
-          <input type="text" id="client-phone" placeholder="Teléfono" required>
-          <button type="submit">Agregar Cliente</button>
-        </form>
-        <table id="clients-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Teléfono</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  `;
+  // =========================
+  // MÓDULO CLIENTES
+  // =========================
+  async function renderClientsModule(userData) {
+    const clientsContainer = document.getElementById("clients-module");
+    clientsContainer.innerHTML = "";
 
-  const addForm = document.getElementById("add-client-form");
-  const tableBody = document.querySelector("#clients-table tbody");
+    try {
+      const snapshot = await getDocs(collection(db, "companies", userData.companyId, "clients"));
+      if (snapshot.empty) {
+        clientsContainer.innerHTML = "<p>No hay clientes registrados.</p>";
+        return;
+      }
 
-  // Función para cargar clientes
-  async function loadClients() {
-    tableBody.innerHTML = "";
-    const snapshot = await getDocs(collection(db, "clients"));
-    snapshot.forEach(docSnap => {
-      const client = docSnap.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${client.name}</td>
-        <td>${client.email}</td>
-        <td>${client.phone}</td>
-        <td>
-          <button class="edit-btn" data-id="${docSnap.id}">Editar</button>
-          <button class="delete-btn" data-id="${docSnap.id}">Eliminar</button>
-        </td>
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr><th>Nombre</th><th>Email</th><th>Teléfono</th></tr>
+        </thead>
+        <tbody></tbody>
       `;
-      tableBody.appendChild(tr);
-    });
+      const tbody = table.querySelector("tbody");
 
-    // Editar cliente
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.id;
-        const docSnap = await getDoc(doc(db, "clients", id));
-        const data = docSnap.data();
-        const name = prompt("Nombre", data.name);
-        const email = prompt("Email", data.email);
-        const phone = prompt("Teléfono", data.phone);
-        if (name && email && phone) {
-          await setDoc(doc(db, "clients", id), { name, email, phone });
-          loadClients();
-        }
+      snapshot.forEach(docSnap => {
+        const client = docSnap.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${client.name}</td><td>${client.email}</td><td>${client.phone || '-'}</td>`;
+        tbody.appendChild(tr);
       });
-    });
 
-    // Eliminar cliente
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.id;
-        if (confirm("¿Eliminar cliente?")) {
-          await deleteDoc(doc(db, "clients", id));
-          loadClients();
-        }
-      });
-    });
+      clientsContainer.appendChild(table);
+    } catch(err) {
+      console.error("Error cargando clientes:", err);
+      clientsContainer.innerHTML = "<p>Error al cargar clientes.</p>";
+    }
   }
 
-  // Agregar cliente
-  addForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("client-name").value;
-    const email = document.getElementById("client-email").value;
-    const phone = document.getElementById("client-phone").value;
+  // =========================
+  // MÓDULO INVENTARIO
+  // =========================
+  async function renderInventoryModule(userData) {
+    const inventoryContainer = document.getElementById("inventory-module");
+    inventoryContainer.innerHTML = "";
 
-    await addDoc(collection(db, "clients"), { name, email, phone });
-    addForm.reset();
-    loadClients();
-  });
+    try {
+      const snapshot = await getDocs(collection(db, "companies", userData.companyId, "inventory"));
+      if (snapshot.empty) {
+        inventoryContainer.innerHTML = "<p>No hay productos en inventario.</p>";
+        return;
+      }
 
-  loadClients();
-}
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr><th>Producto</th><th>Cantidad</th><th>Precio</th></tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      const tbody = table.querySelector("tbody");
 
+      snapshot.forEach(docSnap => {
+        const item = docSnap.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${item.name}</td><td>${item.quantity}</td><td>${item.price}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      inventoryContainer.appendChild(table);
+    } catch(err) {
+      console.error("Error cargando inventario:", err);
+      inventoryContainer.innerHTML = "<p>Error al cargar inventario.</p>";
+    }
+  }
+});
