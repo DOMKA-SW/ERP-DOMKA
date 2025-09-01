@@ -630,3 +630,35 @@ th {
 
 #clientes-module .eliminar-btn { background: #F44336; color: #fff; }
 #clientes-module .eliminar-btn:hover { background: #d32f2f; }
+
+.client-form input, .client-form select {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+}
+
+.client-form button {
+  background: #F27C22;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+}
+
+#clients-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+#clients-table th, #clients-table td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+#clients-table th {
+  background-color: #F27C22;
+  color: #fff;
+}
