@@ -202,3 +202,79 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadCompanies();
   }
 });
+
+// =========================
+// MÓDULO CLIENTES
+// =========================
+async function renderClientsModule(userData) {
+  const companyId = userData.companyId;
+  const clientsTableBody = document.querySelector("#clients-table tbody");
+  const clientForm = document.getElementById("client-form");
+  const clientIdInput = document.getElementById("client-id");
+
+  // Función para cargar clientes
+  async function loadClients() {
+    clientsTableBody.innerHTML = "";
+    const snapshot = await getDocs(collection(db, "clients"));
+    snapshot.forEach(docSnap => {
+      const client = docSnap.data();
+      if (client.companyId === companyId && !client.deleted) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${client.name}</td>
+          <td>${client.email}</td>
+          <td>${client.phone}</td>
+          <td>
+            <button class="edit-client" data-id="${docSnap.id}">✏️</button>
+            <button class="delete-client" data-id="${docSnap.id}">🗑️</button>
+          </td>
+        `;
+        clientsTableBody.appendChild(tr);
+      }
+    });
+  }
+
+  // Agregar o actualizar cliente
+  clientForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = document.getElementById("client-name").value;
+    const email = document.getElementById("client-email").value;
+    const phone = document.getElementById("client-phone").value;
+    const id = clientIdInput.value;
+
+    if (id) {
+      // Actualizar cliente
+      await setDoc(doc(db, "clients", id), { name, email, phone, companyId }, { merge: true });
+      clientIdInput.value = "";
+    } else {
+      // Crear cliente
+      await addDoc(collection(db, "clients"), { name, email, phone, companyId, createdAt: serverTimestamp() });
+    }
+
+    clientForm.reset();
+    loadClients();
+  });
+
+  // Editar y eliminar
+  clientsTableBody.addEventListener("click", e => {
+    if (e.target.classList.contains("edit-client")) {
+      const id = e.target.dataset.id;
+      getDoc(doc(db, "clients", id)).then(docSnap => {
+        const client = docSnap.data();
+        document.getElementById("client-name").value = client.name;
+        document.getElementById("client-email").value = client.email;
+        document.getElementById("client-phone").value = client.phone;
+        clientIdInput.value = id;
+      });
+    }
+
+    if (e.target.classList.contains("delete-client")) {
+      const id = e.target.dataset.id;
+      if (confirm("¿Eliminar este cliente?")) {
+        setDoc(doc(db, "clients", id), { deleted: true }, { merge: true }).then(loadClients);
+      }
+    }
+  });
+
+  await loadClients();
+}
