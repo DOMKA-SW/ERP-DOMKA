@@ -4,60 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOMKA ERP - Dashboard</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <!-- ========================= -->
-  <!-- HEADER / TOPBAR -->
-  <!-- ========================= -->
   <header class="main-header">
     <div class="container">
-      <div class="logo">
-        <img src="assets/logo.png" alt="DOMKA ERP">
-        <span>DOMKA ERP</span>
+      <div class="logo">DOMKA ERP</div>
+      <div class="main-nav">
+        <span id="user-info"></span>
+        <button id="logout-btn">Cerrar sesión</button>
       </div>
-      <nav class="main-nav">
-        <span id="user-info">Cargando usuario...</span>
-        <button id="logout-btn">Salir</button>
-      </nav>
     </div>
   </header>
 
-  <!-- ========================= -->
-  <!-- MAIN DASHBOARD -->
-  <!-- ========================= -->
-  <div class="dashboard container">
-    
-    <!-- Sidebar -->
+  <div class="dashboard">
     <aside class="sidebar">
       <nav>
-        <a href="#" id="menu-clients">👥 Clientes</a>
-        <a href="#" id="menu-inventory">📦 Inventario</a>
-        <a href="#" id="menu-reports">📊 Reportes</a>
-        <a href="#" id="menu-settings">⚙️ Configuración</a>
+        <a href="#" data-module="clients">👥 Clientes</a>
+        <a href="#" data-module="inventory">📦 Inventario</a>
+        <a href="#" data-module="quotes">📋 Cotizaciones</a>
       </nav>
     </aside>
 
-    <!-- Main content -->
     <main class="main-content">
       <div class="topbar">
-        <h2>Panel de control</h2>
+        <h2>Dashboard</h2>
       </div>
-
-      <!-- Módulos dinámicos -->
-      <section id="modules-section" class="modules-grid">
-        <!-- Aquí se renderizan clientes, inventario, reportes, etc. -->
-      </section>
+      <div id="modules-section">
+        <p>Selecciona un módulo</p>
+      </div>
     </main>
   </div>
 
-  <!-- ========================= -->
-  <!-- SCRIPTS -->
-  <!-- ========================= -->
-  <script type="module" src="js/dashboard.js"></script>
-  <script type="module" src="js/clientes.js"></script>
-  <script type="module" src="js/inventory.js"></script>
-
+  <script type="module" src="dashboard.js"></script>
 </body>
 </html>
