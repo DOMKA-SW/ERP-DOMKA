@@ -39,12 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // 🔹 Validar companyId solo si NO es SuperAdmin
-      if (userData.role !== "superadmin") {
-        if (userData.companyId !== companyId) {
-          await signOut(auth);
-          throw new Error("El usuario no pertenece a esta empresa o ID incorrecto.");
-        }
-      }
+     if (userData.role !== "superadmin" && userData.companyId !== companyId) {
+       await signOut(auth);
+       throw new Error("El usuario no pertenece a esta empresa o ID incorrecto.");
+}
 
       // 🔹 Login exitoso → Dashboard
       window.location.href = "dashboard.html";
