@@ -22,18 +22,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const modulesSection = document.getElementById("modules-section");
 
   // 🔹 Verificar sesión activa
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return (window.location.href = "login.html");
+  onAuthStateChanged(auth, async () => {
+    if (!) return (window.location.href = "login.html");
 
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const userData = userDoc.data();
-    if (!userData) return alert("Usuario no registrado en la base de datos.");
+    const Doc = await getDoc(doc(db, "s", .uid));
+    const Data = Doc.data();
+    if (!Data) return alert("Usuario no registrado en la base de datos.");
 
-    userInfo.textContent = `Hola, ${userData.email} (${userData.role})`;
+    Info.textContent = `Hola, ${Data.email} (${Data.role})`;
 
     // Render según rol
-    if (userData.role === "superadmin") renderSuperAdminModules(userData);
-    else if (userData.role === "admin") renderAdminModules(userData);
+    if (Data.role === "superadmin") renderSuperAdminModules(Data);
+    else if (Data.role === "admin") renderAdminModules(Data);
     else renderUserModules(userData);
   });
 
