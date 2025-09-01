@@ -170,75 +170,98 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadCompanies();
   }
 
-  // =========================
-  // MÓDULO CLIENTES
-  // =========================
-  async function renderClientsModule(userData) {
-    const module = document.getElementById("clients-module");
-    module.innerHTML = `
-      <form id="add-client-form">
-        <input type="text" id="client-name" placeholder="Nombre del cliente" required>
-        <input type="email" id="client-email" placeholder="Email del cliente" required>
-        <button type="submit">➕ Agregar Cliente</button>
-      </form>
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="clients-tbody"></tbody>
-      </table>
-    `;
+// =========================
+// MÓDULO CLIENTES
+// =========================
+async function renderClientsModule() {
+  modulesSection.innerHTML = `
+    <div class="module-card">
+      <h3>👥 Clientes</h3>
+      <p>Gestión completa de tus clientes.</p>
+      <div id="clients-panel">
+        <form id="add-client-form">
+          <input type="text" id="client-name" placeholder="Nombre del cliente" required>
+          <input type="email" id="client-email" placeholder="Email" required>
+          <input type="text" id="client-phone" placeholder="Teléfono" required>
+          <button type="submit">Agregar Cliente</button>
+        </form>
+        <table id="clients-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  `;
 
-    const form = document.getElementById("add-client-form");
-    const tbody = document.getElementById("clients-tbody");
-    const companyId = userData.companyId;
+  const addForm = document.getElementById("add-client-form");
+  const tableBody = document.querySelector("#clients-table tbody");
 
-    // Función para listar clientes
-    async function loadClients() {
-      tbody.innerHTML = "";
-      const snapshot = await getDocs(collection(db, `companies/${companyId}/clients`));
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${data.name}</td>
-          <td>${data.email}</td>
-          <td>
-            <button class="delete-btn" data-id="${docSnap.id}">Eliminar</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Agregar eventos de eliminar
-      document.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          await deleteDoc(doc(db, `companies/${companyId}/clients`, id));
-          loadClients();
-        });
-      });
-    }
-
-    // Agregar cliente
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("client-name").value;
-      const email = document.getElementById("client-email").value;
-      try {
-        await addDoc(collection(db, `companies/${companyId}/clients`), { name, email, createdAt: serverTimestamp() });
-        form.reset();
-        await loadClients();
-      } catch (err) {
-        console.error(err);
-        alert("Error al agregar cliente");
-      }
+  // Función para cargar clientes
+  async function loadClients() {
+    tableBody.innerHTML = "";
+    const snapshot = await getDocs(collection(db, "clients"));
+    snapshot.forEach(docSnap => {
+      const client = docSnap.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${client.name}</td>
+        <td>${client.email}</td>
+        <td>${client.phone}</td>
+        <td>
+          <button class="edit-btn" data-id="${docSnap.id}">Editar</button>
+          <button class="delete-btn" data-id="${docSnap.id}">Eliminar</button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
     });
 
-    await loadClients();
+    // Editar cliente
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const docSnap = await getDoc(doc(db, "clients", id));
+        const data = docSnap.data();
+        const name = prompt("Nombre", data.name);
+        const email = prompt("Email", data.email);
+        const phone = prompt("Teléfono", data.phone);
+        if (name && email && phone) {
+          await setDoc(doc(db, "clients", id), { name, email, phone });
+          loadClients();
+        }
+      });
+    });
+
+    // Eliminar cliente
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        if (confirm("¿Eliminar cliente?")) {
+          await deleteDoc(doc(db, "clients", id));
+          loadClients();
+        }
+      });
+    });
   }
-});
+
+  // Agregar cliente
+  addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("client-name").value;
+    const email = document.getElementById("client-email").value;
+    const phone = document.getElementById("client-phone").value;
+
+    await addDoc(collection(db, "clients"), { name, email, phone });
+    addForm.reset();
+    loadClients();
+  });
+
+  loadClients();
+}
+
