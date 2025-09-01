@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
+    const emailInput = document.getElementById("email").value.trim().toLowerCase();
     const password = document.getElementById("password").value;
     const companyId = companyIdInput?.value.trim() || null;
 
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // 🔹 Login en Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, emailInput, password);
       const user = userCredential.user;
 
       // 🔹 Obtener datos del usuario
@@ -32,13 +32,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const userData = userDoc.data();
 
-      // 🔹 Validar companyId para Admin/User
-      if (userData.role !== "superadmin" && userData.companyId !== companyId) {
+      // 🔹 Validar email en Firestore (evita espacios/mayúsculas)
+      if (userData.email.trim().toLowerCase() !== emailInput) {
         await signOut(auth);
-        throw new Error("El usuario no pertenece a esta empresa o ID incorrecto.");
+        throw new Error("Email no coincide con la base de datos.");
       }
 
-      // 🔹 Redirigir al dashboard
+      // 🔹 Validar companyId solo si NO es SuperAdmin
+      if (userData.role !== "superadmin") {
+        if (userData.companyId !== companyId) {
+          await signOut(auth);
+          throw new Error("El usuario no pertenece a esta empresa o ID incorrecto.");
+        }
+      }
+
+      // 🔹 Login exitoso → Dashboard
       window.location.href = "dashboard.html";
 
     } catch (err) {
