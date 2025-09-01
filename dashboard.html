@@ -4,45 +4,71 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOMKA ERP - Dashboard</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <script type="module" src="js/dashboard.js"></script>
-  <link rel="icon" href="/assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="styles/styles.css">
+  <script type="module" src="dashboard.js" defer></script>
+  <script type="module" src="clientes.js" defer></script>
 </head>
 <body>
-  <div class="dashboard-layout">
-    
-    <!-- Sidebar -->
+  <!-- =========================
+       DASHBOARD
+       ========================= -->
+  <div class="dashboard">
+
+    <!-- ======= SIDEBAR ======= -->
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <img src="/assets/logo.png" alt="DOMKA ERP Logo" class="sidebar-logo">
-        <h2>DOMKA ERP</h2>
-        <p id="company-name">Empresa</p>
+      <div class="logo">
+        <img src="assets/logo.png" alt="DOMKA ERP">
+        DOMKA ERP
       </div>
-      <nav class="sidebar-nav">
-        <a href="#" class="active" data-module="home">🏠 Inicio</a>
-        <a href="#" data-module="clientes">👥 Clientes</a>
-        <a href="#" data-module="cotizaciones">📋 Cotizaciones</a>
-        <a href="#" data-module="inventario">📦 Inventario</a>
-        <a href="#" data-module="contabilidad">📒 Contabilidad</a>
-        <a href="#" data-module="configuracion">⚙️ Configuración</a>
+      <nav>
+        <a href="#" id="nav-dashboard">🏠 Dashboard</a>
+        <a href="#" id="nav-clientes">👥 Clientes</a>
+        <a href="#" id="nav-usuarios">👤 Usuarios</a>
+        <a href="#" id="nav-empresas">🏢 Empresas</a>
+        <button id="logout-btn">Salir</button>
       </nav>
-      <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
     </aside>
 
-    <!-- Main Content -->
+    <!-- ======= MAIN CONTENT ======= -->
     <main class="main-content">
+
       <!-- Topbar -->
-      <header class="topbar">
-        <h1 id="welcome-text">Bienvenido</h1>
-      </header>
+      <div class="topbar">
+        <div id="user-info">Hola, Usuario</div>
+      </div>
 
-      <!-- Contenedor donde se cargan módulos -->
-      <section id="module-container" class="content">
-        <h2>Panel Principal</h2>
-        <p>Selecciona un módulo en el menú lateral para comenzar.</p>
+      <!-- Módulos -->
+      <section id="modules-section" class="modules-grid">
+        <!-- Módulos cargados dinámicamente según rol -->
       </section>
-    </main>
 
+      <!-- Clientes Module -->
+      <section id="clientes-module" class="module-card" style="display:none;">
+        <h3>👥 Gestión de Clientes</h3>
+        <p>Administra todos los clientes de tu empresa.</p>
+
+        <form id="cliente-form">
+          <input type="hidden" id="cliente-id">
+          <input type="text" id="cliente-nombre" placeholder="Nombre completo" required>
+          <input type="email" id="cliente-email" placeholder="Email" required>
+          <input type="text" id="cliente-telefono" placeholder="Teléfono">
+          <button type="submit">Guardar Cliente</button>
+        </form>
+
+        <div class="clientes-list">
+          <h4>Clientes Registrados</h4>
+          <ul id="clientes-ul"></ul>
+        </div>
+      </section>
+
+      <!-- SuperAdmin Panel -->
+      <section id="superadmin-panel" class="module-card" style="display:none;">
+        <h3>🛠 SuperAdmin</h3>
+        <p>Gestión de empresas y usuarios.</p>
+      </section>
+
+    </main>
   </div>
+
 </body>
 </html>
