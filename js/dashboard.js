@@ -15,6 +15,10 @@ import {
   getDoc,
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { renderClientsModule } from "./clients.js";
+import { renderInventoryModule } from "./inventory.js";
+
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const userInfo = document.getElementById("user-info");
@@ -46,17 +50,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // RENDER MÓDULOS
   // =========================
-  function renderUserModules(userData) {
-    modulesSection.innerHTML = `
-      <div class="modules-grid">
-        <div class="module-card">
-          <h3>👥 Clientes</h3>
-          <div id="clients-module"></div>
-        </div>
+function renderUserModules(userData) {
+  modulesSection.innerHTML = `
+    <div class="modules-grid">
+      <div class="module-card">
+        <h3>👥 Clientes</h3>
+        <div id="clients-module"></div>
       </div>
-    `;
-    renderClientsModule(userData);
-  }
+      <div class="module-card">
+        <h3>📦 Inventario</h3>
+        <div id="inventory-module"></div>
+      </div>
+    </div>
+  `;
+  renderClientsModule(userData);
+  renderInventoryModule(userData);
+}
 
   function renderAdminModules(userData) {
     modulesSection.innerHTML = `
