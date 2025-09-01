@@ -1,72 +1,102 @@
-import { db, auth } from "./firebase.js";
-import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+// clients.js
+import { db } from "./firebase.js";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const clientesModule = document.getElementById("clientes-module");
-  const form = document.getElementById("cliente-form");
-  const ul = document.getElementById("clientes-ul");
+export async function renderClientsModule(userData) {
+  const moduleContainer = document.getElementById("clients-module");
+  moduleContainer.innerHTML = `
+    <form id="clients-form">
+      <input type="text" id="client-name" placeholder="Nombre del cliente" required>
+      <input type="email" id="client-email" placeholder="Email" required>
+      <input type="text" id="client-phone" placeholder="Teléfono">
+      <button type="submit">Agregar Cliente</button>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="clients-tbody"></tbody>
+    </table>
+  `;
 
-  let currentUserCompanyId = null;
+  const form = document.getElementById("clients-form");
+  const tbody = document.getElementById("clients-tbody");
 
-  // Obtener empresa del usuario actual
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-  import { getDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-  onAuthStateChanged(auth, async user => {
-    if (!user) return;
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    currentUserCompanyId = userDoc.data().companyId;
-    clientesModule.style.display = "block";
-    cargarClientes();
-  });
-
-  // Crear / editar cliente
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = document.getElementById("cliente-id").value;
-    const nombre = document.getElementById("cliente-nombre").value;
-    const email = document.getElementById("cliente-email").value;
-    const telefono = document.getElementById("cliente-telefono").value;
-
-    if (id) {
-      await setDoc(doc(db, "companies", currentUserCompanyId, "clientes", id), { nombre, email, telefono });
-      alert("Cliente actualizado ✅");
-    } else {
-      await addDoc(collection(db, "companies", currentUserCompanyId, "clientes"), { nombre, email, telefono });
-      alert("Cliente creado ✅");
-    }
-
-    form.reset();
-  });
-
-  // Cargar clientes en tiempo real
-  async function cargarClientes() {
-    const clientesRef = collection(db, "companies", currentUserCompanyId, "clientes");
-    onSnapshot(clientesRef, snapshot => {
-      ul.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${data.nombre}</strong> | ${data.email} | ${data.telefono || "-"}
-          <button class="editar-btn">✏️</button>
-          <button class="eliminar-btn">🗑️</button>
-        `;
-        // Editar
-        li.querySelector(".editar-btn").addEventListener("click", () => {
-          document.getElementById("cliente-id").value = docSnap.id;
-          document.getElementById("cliente-nombre").value = data.nombre;
-          document.getElementById("cliente-email").value = data.email;
-          document.getElementById("cliente-telefono").value = data.telefono;
-        });
-        // Eliminar
-        li.querySelector(".eliminar-btn").addEventListener("click", async () => {
-          if (confirm("¿Eliminar cliente?")) {
-            await deleteDoc(doc(db, "companies", currentUserCompanyId, "clientes", docSnap.id));
-          }
-        });
-        ul.appendChild(li);
-      });
+  async function loadClients() {
+    tbody.innerHTML = "";
+    const snapshot = await getDocs(collection(db, "clients"));
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${data.name}</td>
+        <td>${data.email}</td>
+        <td>${data.phone || "-"}</td>
+        <td>
+          <button class="edit-btn" data-id="${docSnap.id}">✏️</button>
+          <button class="delete-btn" data-id="${docSnap.id}">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
   }
-});
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = document.getElementById("client-name").value;
+    const email = document.getElementById("client-email").value;
+    const phone = document.getElementById("client-phone").value;
+    try {
+      await addDoc(collection(db, "clients"), {
+        name, email, phone, createdAt: serverTimestamp(), companyId: userData.companyId
+      });
+      form.reset();
+      loadClients();
+      alert("Cliente agregado ✅");
+    } catch(err) {
+      console.error(err);
+      alert("Error al agregar cliente");
+    }
+  });
+
+  tbody.addEventListener("click", async e => {
+    const id = e.target.dataset.id;
+    if (!id) return;
+    const docRef = doc(db, "clients", id);
+
+    if (e.target.classList.contains("edit-btn")) {
+      const docSnap = await getDocs(docRef);
+      const data = docSnap.data();
+      document.getElementById("client-name").value = data.name;
+      document.getElementById("client-email").value = data.email;
+      document.getElementById("client-phone").value = data.phone || "";
+
+      form.removeEventListener("submit", addClientHandler);
+      form.addEventListener("submit", async ev => {
+        ev.preventDefault();
+        await updateDoc(docRef, {
+          name: document.getElementById("client-name").value,
+          email: document.getElementById("client-email").value,
+          phone: document.getElementById("client-phone").value,
+          updatedAt: serverTimestamp()
+        });
+        form.reset();
+        loadClients();
+        alert("Cliente actualizado ✅");
+      });
+    } else if (e.target.classList.contains("delete-btn")) {
+      if (confirm("¿Desea eliminar este cliente?")) {
+        await deleteDoc(docRef);
+        loadClients();
+        alert("Cliente eliminado ✅");
+      }
+    }
+  });
+
+  await loadClients();
+}
