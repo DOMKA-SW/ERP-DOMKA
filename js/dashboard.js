@@ -1,24 +1,29 @@
 // dashboard.js
 import { auth, db } from "./firebase.js";
 import { signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { collection, getDocs, doc, getDoc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { collection, addDoc, getDocs, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+let currentUserData = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   const userInfo = document.getElementById("user-info");
   const logoutBtn = document.getElementById("logout-btn");
   const modulesSection = document.getElementById("modules-section");
 
-  // 🔹 Verificar sesión activa
+  // 🔹 Verificar sesión
   onAuthStateChanged(auth, async (user) => {
     if (!user) return window.location.href = "login.html";
 
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    const userData = userDoc.data();
-    if (!userData) return alert("Usuario no registrado en la base de datos.");
+    currentUserData = userDoc.data();
+    if (!currentUserData) return alert("Usuario no registrado en la base de datos.");
 
-    userInfo.textContent = `Hola, ${userData.email} (${userData.role})`;
+    userInfo.textContent = `Hola, ${currentUserData.email} (${currentUserData.role})`;
 
-    renderModules(userData);
+    // Render inicial según rol
+    if (currentUserData.role === "superadmin") renderSuperAdminModules();
+    else if (currentUserData.role === "admin") renderAdminModules();
+    else renderUserModules();
   });
 
   // 🔹 Logout
@@ -27,86 +32,136 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "login.html";
   });
 
-  // =========================
-  // RENDER DE MÓDULOS
-  // =========================
-  function renderModules(userData) {
-    modulesSection.innerHTML = "";
+  // 🔹 Sidebar clicks para cambiar módulo
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const module = link.dataset.module;
+      if (!currentUserData) return;
 
-    // Usuarios normales
-    if (userData.role === "user") {
-      renderUserModules(userData);
-    }
-    // Admin
-    else if (userData.role === "admin") {
-      renderAdminModules(userData);
-    }
-    // SuperAdmin
-    else if (userData.role === "superadmin") {
-      renderSuperAdminModules();
-    }
-  }
+      switch(module) {
+        case 'clients':
+          renderClientsModule(currentUserData);
+          break;
+        case 'inventory':
+          renderInventoryModule(currentUserData);
+          break;
+        case 'quotes':
+          renderQuotesModule(currentUserData);
+          break;
+        case 'reports':
+          renderReportsModule(currentUserData);
+          break;
+        case 'settings':
+          renderSettingsModule(currentUserData);
+          break;
+        default:
+          modulesSection.innerHTML = "<p>Selecciona un módulo</p>";
+      }
+    });
+  });
 
   // =========================
-  // MÓDULOS USUARIO
+  // RENDER MÓDULOS
   // =========================
+
   function renderUserModules(userData) {
     modulesSection.innerHTML = `
-      <div class="module-card">
-        <h3>👥 Clientes</h3>
-        <div id="clients-module">Cargando...</div>
-      </div>
-      <div class="module-card">
-        <h3>📦 Inventario</h3>
-        <div id="inventory-module">Cargando...</div>
+      <div class="modules-grid">
+        <div class="module-card" data-module="clients">
+          <h3>👥 Clientes</h3>
+          <div id="clients-module"></div>
+        </div>
+        <div class="module-card" data-module="inventory">
+          <h3>📦 Inventario</h3>
+          <div id="inventory-module"></div>
+        </div>
+        <div class="module-card" data-module="quotes">
+          <h3>📋 Cotizaciones</h3>
+          <div id="quotes-module"></div>
+        </div>
       </div>
     `;
     renderClientsModule(userData);
     renderInventoryModule(userData);
   }
 
-  // =========================
-  // MÓDULOS ADMIN
-  // =========================
-  function renderAdminModules(userData) {
+  function renderAdminModules() {
     modulesSection.innerHTML = `
-      <div class="module-card admin">
-        <h3>📊 Reportes</h3>
-        <p>Visualiza estadísticas y reportes de tu empresa.</p>
-      </div>
-      <div class="module-card admin">
-        <h3>⚙️ Configuración Empresa</h3>
-        <p>Actualiza la información de tu empresa.</p>
-      </div>
-      <div class="module-card admin">
-        <h3>👥 Gestión de Usuarios</h3>
-        <p>Agrega, elimina o modifica usuarios internos.</p>
-      </div>
-      <div class="module-card">
-        <h3>👥 Clientes</h3>
-        <div id="clients-module">Cargando...</div>
-      </div>
-      <div class="module-card">
-        <h3>📦 Inventario</h3>
-        <div id="inventory-module">Cargando...</div>
+      <div class="modules-grid">
+        <div class="module-card admin" data-module="reports">
+          <h3>📊 Reportes</h3>
+          <div id="reports-module"></div>
+        </div>
+        <div class="module-card admin" data-module="settings">
+          <h3>⚙️ Configuración Empresa</h3>
+          <div id="settings-module"></div>
+        </div>
+        <div class="module-card admin" data-module="clients">
+          <h3>👥 Gestión de Usuarios</h3>
+          <div id="clients-module"></div>
+        </div>
       </div>
     `;
-    renderClientsModule(userData);
-    renderInventoryModule(userData);
   }
 
-  // =========================
-  // MÓDULOS SUPERADMIN
-  // =========================
   function renderSuperAdminModules() {
     modulesSection.innerHTML = `
-      <div class="module-card superadmin">
-        <h3>SuperAdmin</h3>
-        <p>Gestión completa de empresas y usuarios.</p>
-        <div id="superadmin-panel">Cargando panel...</div>
+      <div class="modules-grid">
+        <div class="module-card superadmin" data-module="superadmin-panel">
+          <h3>SuperAdmin</h3>
+          <div id="superadmin-panel"></div>
+        </div>
       </div>
     `;
     initSuperAdminPanel();
+  }
+
+  // =========================
+  // CLIENTES
+  // =========================
+  function renderClientsModule(userData) {
+    const container = document.getElementById("clients-module");
+    if(!container) return;
+    container.innerHTML = `<p>Lista de clientes para la empresa: ${userData.companyId || 'N/A'}</p>`;
+    // Aquí se puede agregar la lógica para listar clientes desde Firebase
+  }
+
+  // =========================
+  // INVENTARIO
+  // =========================
+  function renderInventoryModule(userData) {
+    const container = document.getElementById("inventory-module");
+    if(!container) return;
+    container.innerHTML = `<p>Inventario de la empresa: ${userData.companyId || 'N/A'}</p>`;
+    // Lógica de inventario
+  }
+
+  // =========================
+  // COTIZACIONES
+  // =========================
+  function renderQuotesModule(userData) {
+    const container = document.getElementById("quotes-module");
+    if(!container) return;
+    container.innerHTML = `<p>Módulo de cotizaciones.</p>`;
+  }
+
+  // =========================
+  // REPORTES
+  // =========================
+  function renderReportsModule(userData) {
+    const container = document.getElementById("reports-module");
+    if(!container) return;
+    container.innerHTML = `<p>Módulo de reportes.</p>`;
+  }
+
+  // =========================
+  // CONFIGURACIÓN
+  // =========================
+  function renderSettingsModule(userData) {
+    const container = document.getElementById("settings-module");
+    if(!container) return;
+    container.innerHTML = `<p>Configuración de la empresa.</p>`;
   }
 
   // =========================
@@ -142,7 +197,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const assignForm = document.getElementById("assign-user-form");
     const companySelect = document.getElementById("company-select");
 
-    form.addEventListener("submit", async e => {
+    // Crear empresa
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("company-name").value;
       try {
@@ -173,7 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    assignForm.addEventListener("submit", async e => {
+    // Asignar usuario
+    assignForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("user-email").value;
       const role = document.getElementById("user-role").value;
@@ -193,77 +250,4 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadCompanies();
   }
 
-  // =========================
-  // MÓDULO CLIENTES
-  // =========================
-  async function renderClientsModule(userData) {
-    const clientsContainer = document.getElementById("clients-module");
-    clientsContainer.innerHTML = "";
-
-    try {
-      const snapshot = await getDocs(collection(db, "companies", userData.companyId, "clients"));
-      if (snapshot.empty) {
-        clientsContainer.innerHTML = "<p>No hay clientes registrados.</p>";
-        return;
-      }
-
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <thead>
-          <tr><th>Nombre</th><th>Email</th><th>Teléfono</th></tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = table.querySelector("tbody");
-
-      snapshot.forEach(docSnap => {
-        const client = docSnap.data();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${client.name}</td><td>${client.email}</td><td>${client.phone || '-'}</td>`;
-        tbody.appendChild(tr);
-      });
-
-      clientsContainer.appendChild(table);
-    } catch(err) {
-      console.error("Error cargando clientes:", err);
-      clientsContainer.innerHTML = "<p>Error al cargar clientes.</p>";
-    }
-  }
-
-  // =========================
-  // MÓDULO INVENTARIO
-  // =========================
-  async function renderInventoryModule(userData) {
-    const inventoryContainer = document.getElementById("inventory-module");
-    inventoryContainer.innerHTML = "";
-
-    try {
-      const snapshot = await getDocs(collection(db, "companies", userData.companyId, "inventory"));
-      if (snapshot.empty) {
-        inventoryContainer.innerHTML = "<p>No hay productos en inventario.</p>";
-        return;
-      }
-
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <thead>
-          <tr><th>Producto</th><th>Cantidad</th><th>Precio</th></tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = table.querySelector("tbody");
-
-      snapshot.forEach(docSnap => {
-        const item = docSnap.data();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${item.name}</td><td>${item.quantity}</td><td>${item.price}</td>`;
-        tbody.appendChild(tr);
-      });
-
-      inventoryContainer.appendChild(table);
-    } catch(err) {
-      console.error("Error cargando inventario:", err);
-      inventoryContainer.innerHTML = "<p>Error al cargar inventario.</p>";
-    }
-  }
 });
