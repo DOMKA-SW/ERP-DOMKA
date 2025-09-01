@@ -3,7 +3,7 @@ import { auth, db } from "./firebase.js";
 import {
   signOut,
   onAuthStateChanged,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
 import {
   collection,
@@ -12,7 +12,8 @@ import {
   serverTimestamp,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -20,117 +21,85 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logout-btn");
   const modulesSection = document.getElementById("modules-section");
 
-  // -----------------------
-  // VERIFICAR SESIÓN ACTIVA
-  // -----------------------
+  // 🔹 Verificar sesión activa
   onAuthStateChanged(auth, async (user) => {
-    if (!user) return window.location.href = "login.html";
+    if (!user) return (window.location.href = "login.html");
 
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const userData = userDoc.data();
-
-    if (!userData) {
-      alert("Usuario no registrado en la base de datos.");
-      return;
-    }
+    if (!userData) return alert("Usuario no registrado en la base de datos.");
 
     userInfo.textContent = `Hola, ${userData.email} (${userData.role})`;
 
-    // Mostrar módulos según rol
-    if (userData.role === "superadmin") renderSuperAdminModules();
-    else if (userData.role === "admin") renderAdminModules();
-    else renderUserModules();
+    // Render según rol
+    if (userData.role === "superadmin") renderSuperAdminModules(userData);
+    else if (userData.role === "admin") renderAdminModules(userData);
+    else renderUserModules(userData);
   });
 
-  // -----------------------
-  // LOGOUT
-  // -----------------------
+  // 🔹 Logout
   logoutBtn.addEventListener("click", async () => {
     await signOut(auth);
     window.location.href = "login.html";
   });
 
-  // =======================
-  // FUNCIONES DE RENDER
-  // =======================
-
-  function renderUserModules() {
+  // =========================
+  // RENDER MÓDULOS
+  // =========================
+  function renderUserModules(userData) {
     modulesSection.innerHTML = `
       <div class="modules-grid">
-        ${createModuleCard("📋 Cotizaciones", "Gestiona tus cotizaciones de manera simple y rápida.")}
-        ${createModuleCard("👥 Clientes", "Visualiza y administra tu base de clientes.")}
-        ${createModuleCard("📦 Inventario", "Controla el stock de tus productos.")}
-        ${createModuleCard("📒 Contabilidad", "Registra y consulta movimientos contables.")}
+        <div class="module-card">
+          <h3>👥 Clientes</h3>
+          <div id="clients-module"></div>
+        </div>
       </div>
     `;
-    animateModules();
+    renderClientsModule(userData);
   }
 
-  function renderAdminModules() {
+  function renderAdminModules(userData) {
     modulesSection.innerHTML = `
       <div class="modules-grid">
-        ${createModuleCard("📊 Reportes", "Visualiza estadísticas y reportes de tu empresa.")}
-        ${createModuleCard("⚙️ Configuración Empresa", "Actualiza la información de tu empresa.")}
-        ${createModuleCard("👥 Gestión de Usuarios", "Agrega, elimina o modifica usuarios internos.")}
+        <div class="module-card">
+          <h3>👥 Clientes</h3>
+          <div id="clients-module"></div>
+        </div>
       </div>
     `;
-    animateModules();
+    renderClientsModule(userData);
   }
 
-  function renderSuperAdminModules() {
+  function renderSuperAdminModules(userData) {
     modulesSection.innerHTML = `
       <div class="modules-grid">
-        ${createModuleCard("SuperAdmin", "Gestión completa de empresas y usuarios.", "superadmin-panel")}
+        <div class="module-card superadmin">
+          <h3>SuperAdmin</h3>
+          <p>Gestión completa de empresas y usuarios.</p>
+          <div id="superadmin-panel"></div>
+        </div>
       </div>
     `;
     initSuperAdminPanel();
-    animateModules();
   }
 
-  // -----------------------
-  // FUNCIONES UTILES
-  // -----------------------
-  function createModuleCard(title, description, panelId = null) {
-    return `
-      <div class="module-card" ${panelId ? 'id="'+panelId+'"' : ''}>
-        <h3>${title}</h3>
-        <p>${description}</p>
-      </div>
-    `;
-  }
-
-  function animateModules() {
-    const cards = document.querySelectorAll(".module-card");
-    cards.forEach((card, index) => {
-      card.style.opacity = 0;
-      card.style.transform = "translateY(20px)";
-      setTimeout(() => {
-        card.style.transition = "all 0.5s ease-out";
-        card.style.opacity = 1;
-        card.style.transform = "translateY(0)";
-      }, index * 100);
-    });
-  }
-
-  // =======================
-  // PANEL SUPERADMIN
-  // =======================
+  // =========================
+  // SUPERADMIN: Gestión de Empresas
+  // =========================
   async function initSuperAdminPanel() {
     const panel = document.getElementById("superadmin-panel");
     panel.innerHTML = `
-      <form id="create-company-form" class="superadmin-form">
+      <form id="create-company-form">
         <input type="text" id="company-name" placeholder="Nombre de la empresa" required>
         <button type="submit">➕ Crear Empresa</button>
       </form>
-
       <div class="companies-list">
         <h4>Empresas Registradas</h4>
         <ul id="companies-ul"></ul>
       </div>
-
       <div class="assign-user">
         <h4>Asignar Usuario</h4>
-        <form id="assign-user-form" class="superadmin-form">
+        <form id="assign-user-form">
           <select id="company-select" required></select>
           <input type="email" id="user-email" placeholder="Email del usuario" required>
           <select id="user-role">
@@ -147,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const assignForm = document.getElementById("assign-user-form");
     const companySelect = document.getElementById("company-select");
 
-    // CREAR EMPRESA
+    // Crear empresa
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("company-name").value;
@@ -156,18 +125,18 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Empresa creada ✅");
         form.reset();
         await loadCompanies();
-      } catch(err) {
+      } catch (err) {
         console.error(err);
         alert("Error al crear empresa");
       }
     });
 
-    // LISTAR EMPRESAS
+    // Listar empresas
     async function loadCompanies() {
       ul.innerHTML = "";
       companySelect.innerHTML = "";
       const snapshot = await getDocs(collection(db, "companies"));
-      snapshot.forEach(docSnap => {
+      snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const li = document.createElement("li");
         li.textContent = data.name;
@@ -180,20 +149,19 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // ASIGNAR USUARIO
+    // Asignar usuario
     assignForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("user-email").value;
       const role = document.getElementById("user-role").value;
       const companyId = companySelect.value;
-
       try {
         let userRecord = await createUserWithEmailAndPassword(auth, email, "Temporal123*").catch(() => null);
         const uid = userRecord?.user?.uid || email;
         await setDoc(doc(db, "users", uid), { email, role, companyId });
         assignForm.reset();
         alert("Usuario asignado ✅");
-      } catch(err) {
+      } catch (err) {
         console.error(err);
         alert("Error al asignar usuario");
       }
@@ -201,80 +169,76 @@ document.addEventListener("DOMContentLoaded", () => {
 
     await loadCompanies();
   }
-});
 
-// =========================
-// MÓDULO CLIENTES
-// =========================
-async function renderClientsModule(userData) {
-  const companyId = userData.companyId;
-  const clientsTableBody = document.querySelector("#clients-table tbody");
-  const clientForm = document.getElementById("client-form");
-  const clientIdInput = document.getElementById("client-id");
+  // =========================
+  // MÓDULO CLIENTES
+  // =========================
+  async function renderClientsModule(userData) {
+    const module = document.getElementById("clients-module");
+    module.innerHTML = `
+      <form id="add-client-form">
+        <input type="text" id="client-name" placeholder="Nombre del cliente" required>
+        <input type="email" id="client-email" placeholder="Email del cliente" required>
+        <button type="submit">➕ Agregar Cliente</button>
+      </form>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="clients-tbody"></tbody>
+      </table>
+    `;
 
-  // Función para cargar clientes
-  async function loadClients() {
-    clientsTableBody.innerHTML = "";
-    const snapshot = await getDocs(collection(db, "clients"));
-    snapshot.forEach(docSnap => {
-      const client = docSnap.data();
-      if (client.companyId === companyId && !client.deleted) {
+    const form = document.getElementById("add-client-form");
+    const tbody = document.getElementById("clients-tbody");
+    const companyId = userData.companyId;
+
+    // Función para listar clientes
+    async function loadClients() {
+      tbody.innerHTML = "";
+      const snapshot = await getDocs(collection(db, `companies/${companyId}/clients`));
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${client.name}</td>
-          <td>${client.email}</td>
-          <td>${client.phone}</td>
+          <td>${data.name}</td>
+          <td>${data.email}</td>
           <td>
-            <button class="edit-client" data-id="${docSnap.id}">✏️</button>
-            <button class="delete-client" data-id="${docSnap.id}">🗑️</button>
+            <button class="delete-btn" data-id="${docSnap.id}">Eliminar</button>
           </td>
         `;
-        clientsTableBody.appendChild(tr);
-      }
-    });
-  }
+        tbody.appendChild(tr);
+      });
 
-  // Agregar o actualizar cliente
-  clientForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const name = document.getElementById("client-name").value;
-    const email = document.getElementById("client-email").value;
-    const phone = document.getElementById("client-phone").value;
-    const id = clientIdInput.value;
-
-    if (id) {
-      // Actualizar cliente
-      await setDoc(doc(db, "clients", id), { name, email, phone, companyId }, { merge: true });
-      clientIdInput.value = "";
-    } else {
-      // Crear cliente
-      await addDoc(collection(db, "clients"), { name, email, phone, companyId, createdAt: serverTimestamp() });
-    }
-
-    clientForm.reset();
-    loadClients();
-  });
-
-  // Editar y eliminar
-  clientsTableBody.addEventListener("click", e => {
-    if (e.target.classList.contains("edit-client")) {
-      const id = e.target.dataset.id;
-      getDoc(doc(db, "clients", id)).then(docSnap => {
-        const client = docSnap.data();
-        document.getElementById("client-name").value = client.name;
-        document.getElementById("client-email").value = client.email;
-        document.getElementById("client-phone").value = client.phone;
-        clientIdInput.value = id;
+      // Agregar eventos de eliminar
+      document.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          await deleteDoc(doc(db, `companies/${companyId}/clients`, id));
+          loadClients();
+        });
       });
     }
 
-    if (e.target.classList.contains("delete-client")) {
-      const id = e.target.dataset.id;
-      if (confirm("¿Eliminar este cliente?")) {
-        setDoc(doc(db, "clients", id), { deleted: true }, { merge: true }).then(loadClients);
+    // Agregar cliente
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("client-name").value;
+      const email = document.getElementById("client-email").value;
+      try {
+        await addDoc(collection(db, `companies/${companyId}/clients`), { name, email, createdAt: serverTimestamp() });
+        form.reset();
+        await loadClients();
+      } catch (err) {
+        console.error(err);
+        alert("Error al agregar cliente");
       }
-    }
-  });
+    });
 
-  await loadClients();
-}
+    await loadClients();
+  }
+});
