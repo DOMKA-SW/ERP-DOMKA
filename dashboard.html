@@ -4,80 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOMKA ERP - Dashboard</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <script type="module" src="js/dashboard.js" defer></script>
-  <script type="module" src="js/clientes.js" defer></script>
+  <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
-  <!-- =========================
-       DASHBOARD
-       ========================= -->
-  <div class="dashboard">
 
-    <!-- ======= SIDEBAR ======= -->
-    <aside class="sidebar">
+  <!-- ========================= -->
+  <!-- HEADER / TOPBAR -->
+  <!-- ========================= -->
+  <header class="main-header">
+    <div class="container">
       <div class="logo">
         <img src="assets/logo.png" alt="DOMKA ERP">
-        DOMKA ERP
+        <span>DOMKA ERP</span>
       </div>
-      <nav>
-        <a href="#" id="nav-dashboard">🏠 Dashboard</a>
-        <a href="#" id="nav-clientes">👥 Clientes</a>
-        <a href="#" id="nav-usuarios">👤 Usuarios</a>
-        <a href="#" id="nav-empresas">🏢 Empresas</a>
+      <nav class="main-nav">
+        <span id="user-info">Cargando usuario...</span>
         <button id="logout-btn">Salir</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========================= -->
+  <!-- MAIN DASHBOARD -->
+  <!-- ========================= -->
+  <div class="dashboard container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav>
+        <a href="#" id="menu-clients">👥 Clientes</a>
+        <a href="#" id="menu-inventory">📦 Inventario</a>
+        <a href="#" id="menu-reports">📊 Reportes</a>
+        <a href="#" id="menu-settings">⚙️ Configuración</a>
       </nav>
     </aside>
 
-    <!-- ======= MAIN CONTENT ======= -->
+    <!-- Main content -->
     <main class="main-content">
-
-      <!-- Topbar -->
       <div class="topbar">
-        <div id="user-info">Hola, Usuario</div>
+        <h2>Panel de control</h2>
       </div>
 
-<div id="modules-section" class="modules-grid">
-  <div id="inventory-module"></div>
-
-  <!-- Módulo Clientes -->
-  <div class="module-card" id="clients-module">
-    <h3>👥 Clientes</h3>
-    <p>Gestiona la información de tus clientes.</p>
-
-    <!-- Formulario para agregar/editar clientes -->
-    <form id="client-form" class="client-form">
-      <input type="hidden" id="client-id" value="">
-      <input type="text" id="client-name" placeholder="Nombre completo" required>
-      <input type="email" id="client-email" placeholder="Email" required>
-      <input type="text" id="client-phone" placeholder="Teléfono" required>
-      <button type="submit">Guardar Cliente</button>
-    </form>
-
-    <!-- Tabla de clientes -->
-    <table id="clients-table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Teléfono</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-
-      <!-- SuperAdmin Panel -->
-      <section id="superadmin-panel" class="module-card" style="display:none;">
-        <h3>🛠 SuperAdmin</h3>
-        <p>Gestión de empresas y usuarios.</p>
+      <!-- Módulos dinámicos -->
+      <section id="modules-section" class="modules-grid">
+        <!-- Aquí se renderizan clientes, inventario, reportes, etc. -->
       </section>
-
     </main>
   </div>
+
+  <!-- ========================= -->
+  <!-- SCRIPTS -->
+  <!-- ========================= -->
+  <script type="module" src="js/dashboard.js"></script>
+  <script type="module" src="js/clientes.js"></script>
+  <script type="module" src="js/inventory.js"></script>
 
 </body>
 </html>
